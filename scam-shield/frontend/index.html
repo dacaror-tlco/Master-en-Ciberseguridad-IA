@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ScamShield — Panel de análisis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12141A;
+    --surface:#1A1D26;
+    --surface-2:#20242F;
+    --border:#2B303D;
+    --text:#E7E9EE;
+    --text-dim:#8B92A3;
+    --accent:#35D0C0;
+    --accent-dim:#1F5C55;
+    --risk-high:#E5484D;
+    --risk-medium:#F0A93D;
+    --risk-low:#3ECF8E;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
+    min-height:100vh; display:flex;
+  }
+  a{color:var(--accent);}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--surface);
+    border-right:1px solid var(--border); padding:24px 16px;
+    display:flex; flex-direction:column; gap:28px; position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand svg{flex-shrink:0;}
+  .brand-name{font-family:var(--mono); font-weight:600; font-size:15px; letter-spacing:0.02em;}
+  .brand-sub{font-size:10px; color:var(--text-dim); font-family:var(--mono); margin-top:2px;}
+
+  .nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:6px;
+    color:var(--text-dim); font-size:13.5px; cursor:pointer; border:none; background:none;
+    text-align:left; font-family:var(--sans); width:100%; transition:background .12s, color .12s;
+  }
+  .nav-item:hover{background:var(--surface-2); color:var(--text);}
+  .nav-item.active{background:var(--accent-dim); color:var(--accent);}
+  .nav-item .count{
+    margin-left:auto; font-family:var(--mono); font-size:10.5px; color:var(--text-dim);
+    background:var(--surface-2); padding:1px 6px; border-radius:20px;
+  }
+  .nav-item.active .count{color:var(--accent);}
+
+  .sidebar-footer{margin-top:auto; font-size:11px; color:var(--text-dim); line-height:1.5;}
+  .api-config{display:flex; flex-direction:column; gap:4px;}
+  .api-config label{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em;}
+  .api-config input{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+    font-family:var(--mono); font-size:11px; padding:6px 8px; border-radius:5px; width:100%;
+  }
+
+  /* ---------- Main ---------- */
+  main{flex:1; padding:36px 44px; max-width:900px;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  h1{font-family:var(--mono); font-size:20px; font-weight:600; margin:0 0 4px;}
+  .panel-desc{color:var(--text-dim); font-size:13.5px; margin:0 0 28px; max-width:560px; line-height:1.5;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:22px; margin-bottom:20px;
+  }
+  .field-row{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;}
+  .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:220px;}
+  .field label{font-size:12px; color:var(--text-dim); font-weight:500;}
+  input[type=text], textarea{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    font-family:var(--mono); font-size:13px; padding:10px 12px; border-radius:7px; width:100%;
+  }
+  input[type=text]:focus, textarea:focus, input[type=file]:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  textarea{font-family:var(--sans); resize:vertical; min-height:90px;}
+  input[type=file]{
+    background:var(--surface-2); border:1px dashed var(--border); color:var(--text-dim);
+    padding:10px 12px; border-radius:7px; font-size:12.5px; width:100%;
+  }
+
+  button{
+    font-family:var(--sans); font-weight:600; font-size:13.5px; padding:10px 18px;
+    border-radius:7px; border:none; cursor:pointer; transition:opacity .12s, transform .05s;
+  }
+  button:active{transform:scale(0.98);}
+  button:disabled{opacity:0.5; cursor:not-allowed;}
+  .btn-primary{background:var(--accent); color:#0A1512;}
+  .btn-primary:hover:not(:disabled){opacity:0.88;}
+  .btn-secondary{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+  .btn-secondary:hover:not(:disabled){background:var(--border);}
+
+  .hint{font-size:11.5px; color:var(--text-dim); margin-top:8px; line-height:1.5;}
+  .hint code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-family:var(--mono);}
+
+  /* ---------- Resultado / gauge ---------- */
+  .result{display:flex; gap:22px; align-items:flex-start; margin-top:4px;}
+  .gauge-wrap{flex-shrink:0; text-align:center;}
+  .gauge-score{font-family:var(--mono); font-size:22px; font-weight:700; margin-top:-58px;}
+  .gauge-label{font-family:var(--mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em;}
+  .result-body{flex:1; min-width:0;}
+  .result-title{font-family:var(--mono); font-size:14px; margin-bottom:10px; word-break:break-all;}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:14px;}
+  table.kv td{padding:6px 10px; border-bottom:1px solid var(--border); vertical-align:top;}
+  table.kv td:first-child{color:var(--text-dim); width:38%;}
+  table.flags th{
+    text-align:left; font-family:var(--mono); font-size:10.5px; text-transform:uppercase;
+    color:var(--text-dim); padding:6px 10px; border-bottom:1px solid var(--border);
+  }
+  table.flags td{padding:8px 10px; border-bottom:1px solid var(--border); line-height:1.4;}
+
+  .badge{font-family:var(--mono); font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:20px; display:inline-block;}
+  .badge.high{background:rgba(229,72,77,.15); color:var(--risk-high);}
+  .badge.medium{background:rgba(240,169,61,.15); color:var(--risk-medium);}
+  .badge.low{background:rgba(62,207,142,.15); color:var(--risk-low);}
+
+  /* ---------- Casos guardados ---------- */
+  .case-section h3{font-family:var(--mono); font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.04em; margin:26px 0 10px;}
+  .case-section:first-child h3{margin-top:0;}
+  .case-row{
+    display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--surface);
+    border:1px solid var(--border); border-radius:8px; margin-bottom:6px; font-size:13px;
+  }
+  .case-row input[type=checkbox]{width:16px; height:16px; accent-color:var(--accent); flex-shrink:0;}
+  .case-row .case-target{font-family:var(--mono); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .case-row .case-id{color:var(--text-dim); font-family:var(--mono); font-size:11px;}
+  .empty-state{color:var(--text-dim); font-size:13px; padding:14px; font-style:italic;}
+
+  /* ---------- Informe ---------- */
+  .selection-summary{display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;}
+  .selection-chip{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:20px;
+    padding:6px 14px; font-size:12px; font-family:var(--mono); color:var(--text-dim);
+  }
+  .narrative-box{
+    background:var(--surface-2); border:1px solid var(--accent-dim); border-radius:8px;
+    padding:16px; font-size:13px; line-height:1.6; margin-top:12px; white-space:pre-wrap;
+  }
+  .status-line{font-size:12.5px; margin-top:10px; color:var(--text-dim); font-family:var(--mono);}
+  .status-line.ok{color:var(--risk-low);}
+  .status-line.error{color:var(--risk-high);}
+  .actions-row{display:flex; gap:10px; flex-wrap:wrap;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <path d="M13 2 L23 6 V13 C23 19 18.5 22.5 13 24 C7.5 22.5 3 19 3 13 V6 Z" stroke="#35D0C0" stroke-width="1.6" fill="none"/>
+      <circle cx="13" cy="12.5" r="4.2" stroke="#35D0C0" stroke-width="1.6" fill="none"/>
+      <path d="M13 12.5 L13 9" stroke="#35D0C0" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-name">ScamShield</div>
+      <div class="brand-sub">panel de análisis</div>
+    </div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <button class="nav-item active" data-panel="domain">🔎 Dominio</button>
+    <button class="nav-item" data-panel="email">✉️ Email</button>
+    <button class="nav-item" data-panel="wallet">🪙 Wallet</button>
+    <button class="nav-item" data-panel="typosquatting">🎭 Typosquatting</button>
+    <button class="nav-item" data-panel="phone">📞 Teléfono</button>
+    <button class="nav-item" data-panel="cnmv">🏛️ CNMV</button>
+    <button class="nav-item" data-panel="image">🖼️ Imagen</button>
+    <button class="nav-item" data-panel="ip">🌐 IP</button>
+    <button class="nav-item" data-panel="monitoring">🔔 Monitorización <span class="count" id="alerts-count">0</span></button>
+    <button class="nav-item" data-panel="cases">📁 Casos guardados <span class="count" id="cases-count">0</span></button>
+    <button class="nav-item" data-panel="report">📄 Informe <span class="count" id="selected-count">0</span></button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="api-config">
+      <label for="api-base">Backend</label>
+      <input type="text" id="api-base" value="http://127.0.0.1:8000" />
+    </div>
+  </div>
+</aside>
+
+<main>
+
+  <!-- ===================== DOMINIO ===================== -->
+  <section class="panel active" id="panel-domain">
+    <h1>Análisis de dominio</h1>
+    <p class="panel-desc">Consulta WHOIS y el certificado SSL de un dominio para detectar señales típicas de sitios recién montados para phishing. Opcionalmente añade el veredicto de VirusTotal y la reputación de la IP a la que resuelve (AbuseIPDB) si están configurados.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="domain-input">Dominio</label>
+          <input type="text" id="domain-input" placeholder="ejemplo-sospechoso.com" />
+        </div>
+        <button class="btn-primary" id="domain-btn">Analizar dominio</button>
+      </div>
+    </div>
+    <div id="domain-result"></div>
+  </section>
+
+  <!-- ===================== EMAIL ===================== -->
+  <section class="panel" id="panel-email">
+    <h1>Forense de email</h1>
+    <p class="panel-desc">Analiza cabeceras técnicas (SPF/DKIM/DMARC), enlaces del cuerpo, adjuntos y suplantación de marca en un email sospechoso.</p>
+    <div class="card">
+      <div class="field">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <label for="email-paste-input">Pega aquí el email (lo más completo posible: cabeceras + cuerpo)</label>
+          <button type="button" class="btn-secondary" id="email-paste-clear" style="padding:2px 10px; font-size:11.5px;">Limpiar</button>
+        </div>
+        <textarea id="email-paste-input" placeholder="Pega el email tal cual lo ves, o mejor aún, su código fuente (ver abajo cómo obtenerlo) — si solo tienes el texto visible también funciona, aunque no se podrá verificar SPF/DKIM."></textarea>
+      </div>
+      <div class="field-row" style="margin-top:10px;">
+        <div class="field">
+          <label for="email-input">…o sube el archivo (.eml / .txt)</label>
+          <input type="file" id="email-input" accept=".eml,.txt" />
+        </div>
+        <button class="btn-primary" id="email-btn">Analizar email</button>
+      </div>
+      <p class="hint">Para el análisis más fiable (SPF/DKIM/DMARC), usa el código fuente original: en Gmail, menú ⋮ del mensaje → <em>Mostrar original</em> (cópialo y pégalo arriba, o descárgalo y súbelo). En Outlook: Archivo → Propiedades → Encabezados de Internet. Si no puedes conseguirlo, pega igualmente el texto que ves — seguimos analizando enlaces, adjuntos y remitente.</p>
+    </div>
+    <div id="email-result"></div>
+  </section>
+
+  <!-- ===================== WALLET ===================== -->
+  <section class="panel" id="panel-wallet">
+    <h1>Trazado de wallet cripto</h1>
+    <p class="panel-desc">Consulta el histórico público de una dirección BTC, ETH (también en BSC/Polygon) o Tron/TRC20 (USDT): patrones de recogida de fondos y salida rápida de dinero, y cruce contra la lista de direcciones sancionadas por la OFAC.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="wallet-input">Dirección BTC, ETH o Tron (TRC20)</label>
+          <input type="text" id="wallet-input" placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" autocomplete="off" />
+          <p class="hint" id="wallet-format-hint" style="margin:0;">&nbsp;</p>
+        </div>
+        <button class="btn-primary" id="wallet-btn">Analizar wallet</button>
+      </div>
+      <p class="hint">Las direcciones ETH/EVM necesitan <code>ETHERSCAN_API_KEY</code> configurada en el backend. Tron funciona sin key (opcional <code>TRON_API_KEY</code> para más límite de consultas).</p>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <div class="field">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <label for="wallet-extract-input">¿No encuentras la dirección? Pega aquí el mensaje sospechoso completo</label>
+          <button type="button" class="btn-secondary" id="wallet-extract-clear" style="padding:2px 10px; font-size:11.5px;">Limpiar</button>
+        </div>
+        <textarea id="wallet-extract-input" placeholder="Pega el chat, email o mensaje de WhatsApp tal cual — buscamos las direcciones dentro del texto."></textarea>
+      </div>
+      <button class="btn-secondary" id="wallet-extract-btn" style="margin-top:10px;">Buscar direcciones en el texto</button>
+      <div id="wallet-extract-result" style="margin-top:12px;"></div>
+    </div>
+    <div id="wallet-result"></div>
+  </section>
+
+  <!-- ===================== TYPOSQUATTING ===================== -->
+  <section class="panel" id="panel-typosquatting">
+    <h1>Detector de typosquatting</h1>
+    <p class="panel-desc">Dado tu dominio legítimo (o el de la marca que investigas), genera decenas de variantes típicas de suplantación (errores de tecleo, cambios de TLD, palabras de phishing) y comprueba cuáles están realmente registradas. Todas las variantes activas reciben además la reputación de su IP (AbuseIPDB, barato); el análisis completo (WHOIS/SSL/VirusTotal) es más caro y se limita a unas pocas.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="typo-input">Dominio legítimo a proteger</label>
+          <input type="text" id="typo-input" placeholder="tubanco.es" />
+        </div>
+        <button class="btn-primary" id="typo-btn">Buscar variantes activas</button>
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; margin-top:14px; font-size:12.5px; color:var(--text-dim); cursor:pointer;">
+        <input type="checkbox" id="typo-deep" style="width:16px; height:16px; accent-color:var(--accent);" />
+        Analizar en profundidad las variantes activas (WHOIS/SSL/VirusTotal) — más lento, máx. 4 variantes
+      </label>
+    </div>
+    <div id="typo-result"></div>
+  </section>
+
+  <!-- ===================== TELÉFONO ===================== -->
+  <section class="panel" id="panel-phone">
+    <h1>Análisis de teléfono</h1>
+    <p class="panel-desc">Identifica el tipo de línea (móvil, tarificación especial, VoIP...), operador y país de un número — clave para detectar timos de "falso premio" o llamadas perdidas ("wangiri"). Opcionalmente añade reportes comunitarios (OpenSpam), puntuación de fraude (IPQualityScore) y carrier en tiempo real (Twilio Lookup, de pago) si están configurados — nunca busca de quién es el número.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="phone-input">Número de teléfono</label>
+          <input type="text" id="phone-input" placeholder="+34600123456" />
+        </div>
+        <div class="field" style="max-width:140px; flex:0 0 140px;">
+          <label for="phone-region">Región por defecto</label>
+          <input type="text" id="phone-region" value="ES" maxlength="2" style="text-transform:uppercase;" />
+        </div>
+        <button class="btn-primary" id="phone-btn">Analizar teléfono</button>
+      </div>
+      <p class="hint">Si el número ya incluye el prefijo internacional (+34...) la región por defecto no se usa. Solo hace falta si escribes el número en formato local.</p>
+    </div>
+    <div id="phone-result"></div>
+  </section>
+
+  <!-- ===================== CNMV ===================== -->
+  <section class="panel" id="panel-cnmv">
+    <h1>Verificación CNMV</h1>
+    <p class="panel-desc">Comprueba una empresa, broker o web de inversión contra tres fuentes: el listado público de advertencias de la CNMV ("chiringuitos financieros"), el registro de entidades autorizadas de la propia CNMV (España) y el registro de la FCA (Reino Unido) — estos dos últimos en positivo, para detectar "clone scams" que se hacen pasar por firmas realmente autorizadas.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="cnmv-input">Nombre de la empresa o dominio</label>
+          <input type="text" id="cnmv-input" placeholder="Aichaintrader" />
+        </div>
+        <button class="btn-primary" id="cnmv-btn">Verificar entidad</button>
+      </div>
+      <p class="hint">La primera búsqueda puede tardar unos segundos (descarga las advertencias más recientes de la CNMV); las siguientes son instantáneas durante 24h. La CNMV no ofrece API, así que este módulo lee su listado público — si algo falla, dínoslo y lo revisamos.</p>
+    </div>
+    <div id="cnmv-result"></div>
+  </section>
+
+  <!-- ===================== IMAGEN ===================== -->
+  <section class="panel" id="panel-image">
+    <h1>Análisis de imagen</h1>
+    <p class="panel-desc">Extrae metadatos EXIF y calcula una huella visual para detectar si esta misma foto ya se usó en otro caso analizado aquí (foto de perfil reciclada, típico de estafas románticas). El análisis principal es 100% offline y sin reconocimiento facial; opcionalmente, tras analizar una imagen, puedes pedir una búsqueda inversa en internet (SerpApi) o, en casos justificados, una búsqueda de reconocimiento facial (PimEyes) — ambas son acciones separadas que envían la foto a un servicio externo.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="image-input">Archivo de imagen</label>
+          <input type="file" id="image-input" accept="image/*" />
+        </div>
+        <button class="btn-primary" id="image-btn">Analizar imagen</button>
+      </div>
+      <div id="image-preview" style="margin-top:12px;"></div>
+    </div>
+    <div id="image-result"></div>
+  </section>
+
+  <!-- ===================== IP ===================== -->
+  <section class="panel" id="panel-ip">
+    <h1>Análisis de IP</h1>
+    <p class="panel-desc">Comprueba la reputación de una dirección IP (AbuseIPDB): consenso de la comunidad de seguridad sobre esa IP (fuerza bruta, escaneos, spam, phishing...) — útil para una IP vista en una cabecera de email, un log de servidor, o el hosting de un sitio sospechoso.</p>
+    <div class="card">
+      <div class="field-row">
+        <div class="field">
+          <label for="ip-input">Dirección IP</label>
+          <input type="text" id="ip-input" placeholder="1.2.3.4" />
+        </div>
+        <button class="btn-primary" id="ip-btn">Analizar IP</button>
+      </div>
+    </div>
+    <div id="ip-result"></div>
+  </section>
+
+  <!-- ===================== MONITORIZACIÓN ===================== -->
+  <section class="panel" id="panel-monitoring">
+    <h1>Monitorización continua</h1>
+    <p class="panel-desc">Cada sujeto que analizas (dominio, wallet, teléfono, dominio protegido frente a typosquatting, búsqueda CNMV) se re-comprueba periódicamente en segundo plano reutilizando el mismo análisis. Si el riesgo sube de nivel, aparece aquí como alerta — útil para un futuro informe o para que no se te pase por alto.</p>
+    <button class="btn-secondary" id="refresh-monitoring-btn" style="margin-bottom:20px;">↻ Actualizar</button>
+
+    <div class="case-section">
+      <h3>Alertas</h3>
+      <div id="list-alerts"></div>
+    </div>
+
+    <div class="case-section">
+      <h3>Sujetos monitorizados</h3>
+      <div id="list-monitored-subjects"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CASOS GUARDADOS ===================== -->
+  <section class="panel" id="panel-cases">
+    <h1>Casos guardados</h1>
+    <p class="panel-desc">Marca los casos que quieras incluir en el informe combinado. Se actualiza cada vez que entras a esta pestaña.</p>
+    <button class="btn-secondary" id="refresh-cases-btn" style="margin-bottom:20px;">↻ Actualizar listado</button>
+
+    <div class="case-section">
+      <h3>Dominios</h3>
+      <div id="list-domain"></div>
+    </div>
+    <div class="case-section">
+      <h3>Emails</h3>
+      <div id="list-email"></div>
+    </div>
+    <div class="case-section">
+      <h3>Wallets</h3>
+      <div id="list-wallet"></div>
+    </div>
+    <div class="case-section">
+      <h3>Typosquatting</h3>
+      <div id="list-typosquatting"></div>
+    </div>
+    <div class="case-section">
+      <h3>Teléfonos</h3>
+      <div id="list-phone"></div>
+    </div>
+    <div class="case-section">
+      <h3>Verificaciones CNMV</h3>
+      <div id="list-cnmv"></div>
+    </div>
+    <div class="case-section">
+      <h3>Imágenes</h3>
+      <div id="list-image"></div>
+    </div>
+    <div class="case-section">
+      <h3>IPs</h3>
+      <div id="list-ip"></div>
+    </div>
+  </section>
+
+  <!-- ===================== INFORME ===================== -->
+  <section class="panel" id="panel-report">
+    <h1>Generar informe</h1>
+    <p class="panel-desc">Combina los casos seleccionados en la pestaña "Casos guardados" en un único PDF listo para adjuntar a una denuncia.</p>
+
+    <div class="selection-summary" id="selection-summary"></div>
+
+    <div class="card">
+      <div class="field">
+        <label for="victim-notes">Relato de los hechos (opcional)</label>
+        <textarea id="victim-notes" placeholder="Describe qué pasó, en tus propias palabras. Se incluye tal cual en el informe."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <strong style="font-size:13.5px;">Valoración consolidada con IA</strong>
+        <span class="hint" style="margin:0;">opcional · necesita <code>ANTHROPIC_API_KEY</code> en el backend</span>
+      </div>
+      <p class="hint">Detecta correlaciones entre módulos (p.ej. el mismo dominio en dos casos distintos) y redacta un párrafo explicativo. Si no tienes la API key configurada, esto simplemente no se rellenará — el informe funciona igual sin ella.</p>
+      <div class="actions-row" style="margin-top:12px;">
+        <button class="btn-secondary" id="ai-btn">Generar valoración con IA</button>
+      </div>
+      <div id="ai-status"></div>
+      <div id="ai-narrative"></div>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn-primary" id="report-btn">⬇ Descargar informe PDF</button>
+    </div>
+    <div id="report-status"></div>
+  </section>
+
+</main>
+
+<script>
+// ============================================================
+// Estado
+// ============================================================
+const state = {
+  selected: { domain: new Set(), email: new Set(), wallet: new Set(), typosquatting: new Set(), phone: new Set(), cnmv: new Set(), image: new Set(), ip: new Set() },
+  aiNarrative: null,
+  casesCache: { domain: [], email: [], wallet: [] },
+};
+
+function apiBase(){ return document.getElementById('api-base').value.replace(/\/$/, ''); }
+
+// ============================================================
+// Navegación
+// ============================================================
+document.getElementById('nav').addEventListener('click', (e) => {
+  const btn = e.target.closest('.nav-item');
+  if(!btn) return;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+  if(btn.dataset.panel === 'cases') loadCases();
+  if(btn.dataset.panel === 'report') renderSelectionSummary();
+  if(btn.dataset.panel === 'monitoring') loadMonitoring();
+});
+
+// ============================================================
+// Gauge SVG (elemento firma, reutilizado en todos los resultados)
+// ============================================================
+function riskLevel(score){
+  if(score >= 60) return {key:'high', label:'RIESGO ALTO', color:'var(--risk-high)'};
+  if(score >= 30) return {key:'medium', label:'RIESGO MEDIO', color:'var(--risk-medium)'};
+  return {key:'low', label:'RIESGO BAJO', color:'var(--risk-low)'};
+}
+
+function gaugeSVG(score){
+  const level = riskLevel(score);
+  const r = 42, circ = 2 * Math.PI * r;
+  const offset = circ * (1 - score / 100);
+  return `
+    <div class="gauge-wrap">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle cx="55" cy="55" r="${r}" stroke="var(--border)" stroke-width="9" fill="none"/>
+        <circle cx="55" cy="55" r="${r}" stroke="${level.color}" stroke-width="9" fill="none"
+          stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"
+          transform="rotate(-90 55 55)"/>
+      </svg>
+      <div class="gauge-score" style="color:${level.color}">${score}</div>
+      <div class="gauge-label">${level.label}</div>
+    </div>`;
+}
+
+function escapeHtml(value){
+  if(value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function flagsTable(flags){
+  if(!flags || flags.length === 0){
+    return '<p class="hint">No se detectaron señales de riesgo.</p>';
+  }
+  const rows = flags.map(f => {
+    const lvl = f.severity === 'high' ? 'high' : f.severity === 'medium' ? 'medium' : 'low';
+    const label = lvl === 'high' ? 'ALTA' : lvl === 'medium' ? 'MEDIA' : 'BAJA';
+    return `<tr>
+      <td><span class="badge ${lvl}">${label}</span></td>
+      <td style="font-family:var(--mono); font-size:11.5px;">${escapeHtml(f.code)}</td>
+      <td>${escapeHtml(f.description)}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="flags"><thead><tr><th>Severidad</th><th>Señal</th><th>Descripción</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function kvTable(pairs){
+  const rows = pairs.map(([k,v]) => `<tr><td>${escapeHtml(k)}</td><td>${v === null || v === undefined || v === '' ? '—' : escapeHtml(v)}</td></tr>`).join('');
+  return `<table class="kv">${rows}</table>`;
+}
+
+function linksTable(links){
+  if(!links || links.length === 0) return '';
+  const rows = links.map(l => {
+    const dest = l.redirects_to || l.domain;
+    const notes = [];
+    if(l.is_shortener) notes.push(`acortador${l.redirects_to ? ' → ' + escapeHtml(l.redirects_to) : ' (destino no resuelto)'}`);
+    if(l.suspected_brand) notes.push(`<span class="badge high">imita a "${escapeHtml(l.suspected_brand)}"</span>`);
+    if(l.domain_age_days !== null && l.domain_age_days !== undefined) notes.push(`dominio de ${l.domain_age_days} días`);
+    if(l.virustotal_malicious_count) notes.push(`<span class="badge high">${l.virustotal_malicious_count} motores VT lo marcan malicioso</span>`);
+    return `<tr>
+      <td style="word-break:break-all; font-family:var(--mono); font-size:11px;">${escapeHtml(l.url)}</td>
+      <td>${escapeHtml(dest)}</td>
+      <td>${notes.join(' · ') || '—'}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="flags"><thead><tr><th>Enlace</th><th>Dominio destino</th><th>Notas</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function attachmentsTable(attachments){
+  if(!attachments || attachments.length === 0) return '';
+  const rows = attachments.map(a => {
+    const risky = a.is_dangerous_extension || a.has_double_extension;
+    const notes = [];
+    if(a.is_dangerous_extension) notes.push('extensión ejecutable');
+    if(a.has_double_extension) notes.push('doble extensión');
+    return `<tr>
+      <td>${risky ? '<span class="badge high">⚠</span> ' : ''}${escapeHtml(a.filename)}</td>
+      <td>${(a.size_bytes/1024).toFixed(1)} KB</td>
+      <td style="font-family:var(--mono); font-size:10.5px;">${escapeHtml(a.sha256.slice(0,16))}…</td>
+      <td>${notes.join(', ') || '—'}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="flags"><thead><tr><th>Adjunto</th><th>Tamaño</th><th>SHA-256</th><th>Notas</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function apiRequest(path, options={}){
+  const res = await fetch(apiBase() + path, options);
+  let body;
+  try{ body = await res.json(); }catch(e){ body = null; }
+  if(!res.ok){
+    const detail = body && body.detail ? body.detail : `Error ${res.status}`;
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+  }
+  return body;
+}
+
+// ============================================================
+// Dominio
+// ============================================================
+document.getElementById('domain-btn').addEventListener('click', async () => {
+  const domain = document.getElementById('domain-input').value.trim();
+  const out = document.getElementById('domain-result');
+  const btn = document.getElementById('domain-btn');
+  if(!domain){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Escribe un dominio primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/domain', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({domain})
+    });
+    const w = data.whois || {}, s = data.ssl || {}, vt = data.virustotal, abuse = data.abuseipdb;
+    const dns = data.dns, crtsh = data.crtsh, wayback = data.wayback;
+    const otherIps = (data.ip_reputations || []).filter(e => e.ip !== data.resolved_ip);
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${data.domain}</div>
+        <strong style="font-size:12.5px; color:var(--text-dim);">WHOIS</strong>
+        ${kvTable([['Registrador', w.registrar],['Fecha de registro', w.creation_date],['Antigüedad (días)', w.domain_age_days],['País', w.country]])}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Certificado SSL</strong>
+        ${kvTable([['Válido', s.has_valid_cert ? 'Sí' : 'No'],['Emisor', s.issuer],['Días desde emisión', s.days_since_issued]])}
+        ${vt ? `<strong style="font-size:12.5px; color:var(--text-dim);">VirusTotal</strong>
+        ${kvTable([['Motores: malicioso', vt.malicious_count],['Motores: sospechoso', vt.suspicious_count],['Sin detección', vt.undetected_count],['Categorías', (vt.categories||[]).join(', ')]])}` : ''}
+        ${data.resolved_ip ? `<strong style="font-size:12.5px; color:var(--text-dim);">IP resuelta${abuse ? ' — reputación (AbuseIPDB)' : ''}</strong>
+        ${kvTable([
+          ['IP', data.resolved_ip],
+          ...(abuse ? [['Puntuación de abuso', `${abuse.abuse_confidence_score}/100`], ['Nº de reportes', abuse.total_reports], ['ISP', abuse.isp], ['Nodo Tor', abuse.is_tor ? 'Sí' : 'No']] : []),
+        ])}` : ''}
+        ${otherIps.length ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">Otras IPs (${otherIps.length})</strong>
+        ${kvTable(otherIps.map(e => [e.ip, e.abuseipdb ? `${e.abuseipdb.abuse_confidence_score}/100 de abuso (${e.abuseipdb.total_reports} reportes)` : 'sin datos AbuseIPDB']))}` : ''}
+        ${dns ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">DNS</strong>
+        ${kvTable([
+          ['Servidores de correo (MX)', dns.mx_hosts.length ? dns.mx_hosts.join(', ') : '—'],
+          ['SPF configurado', dns.mx_hosts.length ? (dns.has_spf ? 'Sí' : 'No') : 'N/A (sin MX)'],
+          ['DMARC configurado', dns.mx_hosts.length ? (dns.has_dmarc ? 'Sí' : 'No') : 'N/A (sin MX)'],
+          ['Registros CAA', dns.caa_records.length || 'Ninguno'],
+        ])}` : ''}
+        ${crtsh ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">Subdominios relacionados (crt.sh)</strong>
+        ${kvTable([
+          ['Subdominios encontrados', crtsh.subdomain_count],
+          ['Ejemplos', crtsh.subdomains.slice(0, 8).join(', ') || '—'],
+        ])}
+        ${crtsh.suspected_brand_subdomains.length ? `<p class="hint" style="color:var(--risk-high)">⚠ Mencionan una marca conocida sin pertenecerle: ${crtsh.suspected_brand_subdomains.map(escapeHtml).join(', ')}</p>` : ''}` : ''}
+        ${wayback ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">Historial (Wayback Machine)</strong>
+        ${kvTable([
+          ['Capturas totales', wayback.total_snapshots],
+          ['Primera captura', wayback.first_snapshot],
+          ['Última captura', wayback.last_snapshot],
+        ])}` : ''}
+        <strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        ${data.errors.length ? `<p class="hint" style="color:var(--risk-medium)">${data.errors.join(' · ')}</p>` : ''}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Analizar dominio';
+  }
+});
+
+// ============================================================
+// Email
+// ============================================================
+document.getElementById('email-paste-clear').addEventListener('click', () => {
+  document.getElementById('email-paste-input').value = '';
+  document.getElementById('email-input').value = '';
+  document.getElementById('email-result').innerHTML = '';
+});
+
+document.getElementById('email-btn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('email-input');
+  const pasteInput = document.getElementById('email-paste-input');
+  const out = document.getElementById('email-result');
+  const btn = document.getElementById('email-btn');
+
+  const hasFile = fileInput.files.length > 0;
+  const pastedText = pasteInput.value.trim();
+  if(!hasFile && !pastedText){
+    out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Pega el email arriba o selecciona un archivo.</p>';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  out.innerHTML = '';
+  try{
+    let data;
+    if(hasFile){
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      data = await apiRequest('/analysis/email/file', {method:'POST', body: formData});
+    } else {
+      data = await apiRequest('/analysis/email', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({raw_email: pastedText})
+      });
+    }
+    const h = data.headers || {};
+    const ipAbuse = data.originating_ip_abuseipdb;
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${escapeHtml(h.subject) || '(sin asunto)'}</div>
+        ${data.is_raw_source === false ? '<p class="hint" style="color:var(--risk-medium)">⚠ No se detectó código fuente real (sin cabeceras técnicas) — no se pudo verificar SPF/DKIM/DMARC. El análisis se basa en el contenido (enlaces, adjuntos, remitente).</p>' : ''}
+        ${kvTable([
+          ['Remitente', h.from_address],['Nombre mostrado', h.from_display_name],['Responder a', h.reply_to],
+          ['SPF', h.spf_result],['DKIM', h.dkim_result],['DMARC', h.dmarc_result],
+          ['IP de origen', h.originating_ip]
+        ])}
+        ${h.originating_ip ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">IP de origen${ipAbuse ? ' — reputación (AbuseIPDB)' : ''}</strong>
+        ${kvTable(
+          ipAbuse
+            ? [['Puntuación de abuso', `${ipAbuse.abuse_confidence_score}/100`], ['Nº de reportes', ipAbuse.total_reports], ['ISP', ipAbuse.isp], ['País', ipAbuse.country_code], ['Nodo Tor', ipAbuse.is_tor ? 'Sí' : 'No']]
+            : [['Reputación', 'No se pudo consultar AbuseIPDB para esta IP (ver errores abajo)']]
+        )}` : ''}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        ${data.links && data.links.length ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">Enlaces del cuerpo (${data.links.length})</strong>${linksTable(data.links)}` : ''}
+        ${data.attachments && data.attachments.length ? `<strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:12px;">Adjuntos (${data.attachments.length})</strong>${attachmentsTable(data.attachments)}` : ''}
+        ${data.ai_explanation ? `<div class="hint" style="margin-top:12px; padding:10px; background:var(--surface-2); border-radius:8px;"><strong>Explicación:</strong> ${escapeHtml(data.ai_explanation)}</div>` : ''}
+        ${data.errors && data.errors.length ? `<p class="hint" style="color:var(--risk-medium)">${data.errors.map(escapeHtml).join(' · ')}</p>` : ''}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Analizar email';
+  }
+});
+
+// ============================================================
+// Wallet
+// ============================================================
+
+// Ayuda de formato en vivo: al escribir, el backend (una sola fuente de
+// verdad, sin duplicar regex en JS) dice qué tipo de dirección es.
+let walletFormatTimer = null;
+document.getElementById('wallet-input').addEventListener('input', (e) => {
+  const hint = document.getElementById('wallet-format-hint');
+  const address = e.target.value.trim();
+  clearTimeout(walletFormatTimer);
+  if(!address){ hint.innerHTML = '&nbsp;'; return; }
+  walletFormatTimer = setTimeout(async () => {
+    try{
+      const fmt = await apiRequest('/analysis/wallet/format?address=' + encodeURIComponent(address));
+      if(!fmt.chain){ hint.innerHTML = 'Formato no reconocido todavía'; hint.style.color = 'var(--text-dim)'; return; }
+      const chainName = {BTC: 'Bitcoin', ETH: 'Ethereum/EVM', TRON: 'Tron (TRC20)'}[fmt.chain] || fmt.chain;
+      hint.innerHTML = `Detectado: ${chainName}${fmt.subtype ? ' — ' + fmt.subtype : ''}`;
+      hint.style.color = 'var(--risk-low)';
+    }catch(err){ hint.innerHTML = '&nbsp;'; }
+  }, 300);
+});
+
+document.getElementById('wallet-btn').addEventListener('click', async () => {
+  const address = document.getElementById('wallet-input').value.trim();
+  const out = document.getElementById('wallet-result');
+  const btn = document.getElementById('wallet-btn');
+  if(!address){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Escribe una dirección primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/wallet', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({address})
+    });
+    const w = data.wallet || {};
+    const flowUnit = w.token || w.chain;
+    const chainLabel = w.evm_network ? `${w.chain} — ${w.evm_network}` : w.chain;
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${w.address} (${chainLabel})</div>
+        ${kvTable([
+          ['Transacciones analizadas', w.n_transactions],
+          ['Total recibido', w.total_received + ' ' + flowUnit],
+          ['Total enviado', w.total_sent + ' ' + flowUnit],
+          ['Balance actual', w.balance + ' ' + w.chain],
+          ['Primera transacción', w.first_transaction_at],
+          ['Remitentes distintos', w.unique_senders_recent],
+        ])}
+        ${w.note ? `<p class="hint">${w.note}</p>` : ''}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Analizar wallet';
+  }
+});
+
+document.getElementById('wallet-extract-clear').addEventListener('click', () => {
+  document.getElementById('wallet-extract-input').value = '';
+  document.getElementById('wallet-extract-result').innerHTML = '';
+});
+
+document.getElementById('wallet-extract-btn').addEventListener('click', async () => {
+  const text = document.getElementById('wallet-extract-input').value;
+  const out = document.getElementById('wallet-extract-result');
+  const btn = document.getElementById('wallet-extract-btn');
+  if(!text.trim()){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Pega un texto primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Buscando…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/wallet/extract-addresses', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})
+    });
+    if(!data.candidates.length){
+      out.innerHTML = '<p class="hint">No se ha encontrado ninguna dirección reconocible en ese texto.</p>';
+    }else{
+      out.innerHTML = data.candidates.map(c => `
+        <span class="selection-chip" style="display:inline-flex; align-items:center; gap:8px; margin:0 8px 8px 0;">
+          <span style="font-family:var(--mono);">${c.address}</span> (${c.chain})
+          <button class="btn-secondary" style="padding:3px 10px; font-size:11.5px;" data-address="${c.address}">Analizar</button>
+        </span>`).join('');
+      out.querySelectorAll('button[data-address]').forEach(b => b.addEventListener('click', () => {
+        document.getElementById('wallet-input').value = b.dataset.address;
+        document.getElementById('wallet-input').dispatchEvent(new Event('input'));
+        document.getElementById('wallet-btn').click();
+      }));
+    }
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Buscar direcciones en el texto';
+  }
+});
+
+// ============================================================
+// Typosquatting
+// ============================================================
+document.getElementById('typo-btn').addEventListener('click', async () => {
+  const domain = document.getElementById('typo-input').value.trim();
+  const deep = document.getElementById('typo-deep').checked;
+  const out = document.getElementById('typo-result');
+  const btn = document.getElementById('typo-btn');
+  if(!domain){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Escribe un dominio primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = deep ? 'Buscando y analizando… (puede tardar)' : 'Buscando variantes…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/typosquatting', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({domain, include_full_analysis: deep, max_full_analysis: 4})
+    });
+
+    const rows = data.candidates.map(c => {
+      // risk_score puede venir de un análisis completo (WHOIS/SSL/VirusTotal, caro y
+      // limitado a unas pocas variantes) o solo de la reputación de la IP (AbuseIPDB,
+      // barato, aplicado a todas las variantes activas) — se distingue con una etiqueta.
+      const scoreCell = c.risk_score !== null
+        ? `<span class="badge ${riskLevel(c.risk_score).key}">${c.risk_score}</span> <span class="hint" style="margin:0;">${c.fully_analyzed ? 'completo' : 'IP'}</span>`
+        : '<span class="hint" style="margin:0;">sin analizar</span>';
+      return `
+      <tr>
+        <td style="font-family:var(--mono); font-size:12px;">${c.variant}</td>
+        <td style="font-size:11.5px; color:var(--text-dim);">${c.technique}</td>
+        <td style="font-family:var(--mono); font-size:11.5px;">${c.ip_address || '—'}</td>
+        <td>${scoreCell}</td>
+      </tr>`;
+    }).join('');
+
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${data.domain}</div>
+        ${kvTable([
+          ['Variantes generadas', data.variants_generated],
+          ['Variantes activas encontradas', data.resolved_count],
+        ])}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        ${data.candidates.length ? `
+        <strong style="font-size:12.5px; color:var(--text-dim); display:block; margin-top:14px;">Variantes activas</strong>
+        <table class="flags"><thead><tr><th>Dominio</th><th>Técnica</th><th>IP</th><th>Score</th></tr></thead><tbody>${rows}</tbody></table>
+        ` : '<p class="hint">No se encontró ninguna variante activa — buena señal.</p>'}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Buscar variantes activas';
+  }
+});
+
+// ============================================================
+// Teléfono
+// ============================================================
+document.getElementById('phone-btn').addEventListener('click', async () => {
+  const phone = document.getElementById('phone-input').value.trim();
+  const region = document.getElementById('phone-region').value.trim() || 'ES';
+  const out = document.getElementById('phone-result');
+  const btn = document.getElementById('phone-btn');
+  if(!phone){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Escribe un número primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/phone', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone, default_region: region})
+    });
+    const p = data.phone || {}, community = data.community_reports;
+    const fraud = data.fraud_score, carrierIntel = data.carrier_intelligence;
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${p.international_format || phone}</div>
+        ${kvTable([
+          ['País', p.country_name],
+          ['Operador', p.carrier],
+          ['Tipo de línea', p.line_type],
+          ['Formato válido', p.is_valid ? 'Sí' : 'No'],
+          ['Formato nacional', p.national_format],
+        ])}
+        ${community ? `<strong style="font-size:12.5px; color:var(--text-dim);">Reportes de la comunidad (OpenSpam)</strong>
+        ${kvTable([['Nº de reportes', community.reports_count],['Categoría', community.category],['Provincia', community.province],['Nivel de peligro', community.danger_level]])}` : ''}
+        ${fraud ? `<strong style="font-size:12.5px; color:var(--text-dim);">Puntuación de fraude (IPQualityScore)</strong>
+        ${kvTable([
+          ['Fraud score', fraud.fraud_score != null ? `${fraud.fraud_score}/100` : null],
+          ['VOIP', fraud.voip ? 'Sí' : 'No'],
+          ['Prepago', fraud.prepaid ? 'Sí' : 'No'],
+          ['Abuso reciente', fraud.recent_abuse ? 'Sí' : 'No'],
+          ['Filtrado en brecha de datos', fraud.leaked ? 'Sí' : 'No'],
+        ])}` : ''}
+        ${carrierIntel ? `<strong style="font-size:12.5px; color:var(--text-dim);">Carrier en tiempo real (Twilio Lookup)</strong>
+        ${kvTable([['Operador', carrierIntel.carrier_name], ['Tipo de línea (en vivo)', carrierIntel.line_type]])}` : ''}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        ${data.errors.length ? `<p class="hint" style="color:var(--risk-medium)">${data.errors.join(' · ')}</p>` : ''}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Analizar teléfono';
+  }
+});
+
+// ============================================================
+// CNMV
+// ============================================================
+document.getElementById('cnmv-btn').addEventListener('click', async () => {
+  const query = document.getElementById('cnmv-input').value.trim();
+  const out = document.getElementById('cnmv-result');
+  const btn = document.getElementById('cnmv-btn');
+  if(!query){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Escribe un nombre primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/cnmv-check', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({query})
+    });
+    // Este listado casi siempre da 0 (solo cubre ~1 año de advertencias recientes) —
+    // por eso solo se muestra cuando de verdad hay algo que enseñar, igual que las otras dos fuentes.
+    const matchesHtml = data.matches.length
+      ? data.matches.map(m => `<div class="card" style="margin-bottom:8px;">${kvTable([
+          ['Fecha de la advertencia', m.fecha],
+          ['Entidad(es) advertida(s)', (m.companias||'').replace(/\n/g,'<br/>')],
+          ['Observaciones', m.observaciones],
+        ])}</div>`).join('')
+      : '';
+    const fcaHtml = (data.fca_matches||[]).length
+      ? data.fca_matches.map(m => `<div class="case-row"><span class="case-target">${m.name}${m.url ? ` <a href="${m.url}" target="_blank" rel="noopener">↗</a>` : ''}</span><span class="hint" style="margin:0;">${m.status} · ${m.reference_number}</span></div>`).join('')
+      : '';
+    const registryHtml = data.registry_matches == null
+      ? ''
+      : (data.registry_matches.length
+          ? data.registry_matches.map(m => `<div class="case-row"><span class="case-target">${m.name}</span><span class="hint" style="margin:0;">${m.code}</span></div>`).join('')
+          : '<p class="hint">No se ha encontrado ninguna entidad con este nombre en el registro.</p>');
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — "${data.query}"</div>
+        ${matchesHtml ? `<strong style="font-size:12.5px; color:var(--text-dim);">Advertencias públicas de la CNMV (${data.match_count})</strong>${matchesHtml}` : ''}
+        ${fcaHtml ? `<strong style="font-size:12.5px; color:var(--text-dim);">Registro FCA (Reino Unido)</strong>${fcaHtml}` : ''}
+        ${registryHtml ? `<strong style="font-size:12.5px; color:var(--text-dim);">Registro de entidades autorizadas (CNMV)</strong>${registryHtml}` : ''}
+        ${!matchesHtml && !fcaHtml && !registryHtml ? '<p class="hint">No se ha encontrado nada relevante en ninguna de las tres fuentes.</p>' : ''}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        ${data.errors.length ? `<p class="hint" style="color:var(--risk-medium)">${data.errors.join(' · ')}</p>` : ''}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Verificar entidad';
+  }
+});
+
+// ============================================================
+// IP
+// ============================================================
+document.getElementById('ip-btn').addEventListener('click', async () => {
+  const ip = document.getElementById('ip-input').value.trim();
+  const out = document.getElementById('ip-result');
+  const btn = document.getElementById('ip-btn');
+  if(!ip){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Escribe una IP primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  out.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/ip', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ip})
+    });
+    const abuse = data.abuseipdb;
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${data.ip}</div>
+        ${abuse ? `<strong style="font-size:12.5px; color:var(--text-dim);">Reputación (AbuseIPDB)</strong>
+        ${kvTable([
+          ['Puntuación de abuso', `${abuse.abuse_confidence_score}/100`],
+          ['Nº de reportes', abuse.total_reports],
+          ['ISP', abuse.isp],
+          ['Tipo de uso', abuse.usage_type],
+          ['País', abuse.country_code],
+          ['Nodo de salida Tor', abuse.is_tor ? 'Sí' : 'No'],
+        ])}` : ''}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        ${data.errors.length ? `<p class="hint" style="color:var(--risk-medium)">${data.errors.join(' · ')}</p>` : ''}
+      </div>
+    </div></div>`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Analizar IP';
+  }
+});
+
+// ============================================================
+// Imagen
+// ============================================================
+document.getElementById('image-input').addEventListener('change', () => {
+  const fileInput = document.getElementById('image-input');
+  const preview = document.getElementById('image-preview');
+  if(!fileInput.files.length){ preview.innerHTML = ''; return; }
+  const url = URL.createObjectURL(fileInput.files[0]);
+  preview.innerHTML = `<img src="${url}" style="max-width:180px; max-height:180px; border-radius:8px; border:1px solid var(--border);" />`;
+});
+
+document.getElementById('image-btn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('image-input');
+  const out = document.getElementById('image-result');
+  const btn = document.getElementById('image-btn');
+  if(!fileInput.files.length){ out.innerHTML = '<p class="hint" style="color:var(--risk-high)">Selecciona una imagen primero.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Analizando…';
+  out.innerHTML = '';
+  try{
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    const data = await apiRequest('/analysis/image', {method:'POST', body: formData});
+    const exif = data.exif || {};
+    const matchesHtml = data.matches.length
+      ? data.matches.map(m => `<div class="case-row"><span class="case-target">Caso #${m.case_id} — ${m.filename||'(sin nombre)'}</span><span class="badge medium">${m.similarity_percent}% similar</span></div>`).join('')
+      : '<p class="hint">No coincide con ninguna imagen analizada antes en esta herramienta.</p>';
+    const linksHtml = Object.entries(data.reverse_search_links || {}).map(([name, url]) =>
+      `<a href="${url}" target="_blank" rel="noopener" class="btn-secondary" style="display:inline-block; text-decoration:none; margin:4px 6px 0 0; padding:6px 12px; font-size:12px;">${name} ↗</a>`
+    ).join('');
+    out.innerHTML = `<div class="card"><div class="result">
+      ${gaugeSVG(data.risk_score)}
+      <div class="result-body">
+        <div class="result-title">Caso #${data.id} — ${data.filename || '(sin nombre)'}</div>
+        <strong style="font-size:12.5px; color:var(--text-dim);">Metadatos EXIF</strong>
+        ${kvTable([
+          ['Tiene metadatos', exif.has_exif ? 'Sí' : 'No'],
+          ['Cámara', [exif.camera_make, exif.camera_model].filter(Boolean).join(' ') || null],
+          ['Software', exif.software],
+          ['Fecha original', exif.date_taken],
+          ['GPS', exif.gps_latitude ? `${exif.gps_latitude}, ${exif.gps_longitude}` : null],
+        ])}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Coincidencias con otros casos</strong>
+        ${matchesHtml}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Señales</strong>
+        ${flagsTable(data.risk_flags)}
+        <strong style="font-size:12.5px; color:var(--text-dim);">Comprobar búsqueda inversa manualmente</strong>
+        <p class="hint">No podemos pre-rellenar la búsqueda (la imagen no se aloja en ningún sitio público) — sube tú el archivo en la web que prefieras:</p>
+        <div>${linksHtml}</div>
+      </div>
+    </div></div>
+    ${imageToolsHtml(data.id)}`;
+  }catch(err){
+    out.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Analizar imagen';
+  }
+});
+
+// --- Acciones opcionales sobre un caso ya analizado: SerpApi y PimEyes ---
+// Se muestran aparte del resultado principal porque, a diferencia del resto
+// del análisis de imagen (100% offline), envían la foto a un servicio
+// externo — por eso cada bloque deja explícito qué herramienta se está
+// usando en cada momento.
+function imageToolsHtml(caseId){
+  return `
+  <div class="card" style="margin-top:14px;">
+    <strong style="font-size:12.5px; color:var(--text-dim);">🔎 Búsqueda inversa en internet (SerpApi)</strong>
+    <p class="hint">Acción opcional y separada: envía la foto a SerpApi/Google para ver si aparece en otras páginas. Sin <code>SERPAPI_API_KEY</code>/<code>PUBLIC_BASE_URL</code> configuradas, degrada a los enlaces manuales de arriba.</p>
+    <button class="btn-secondary" data-action="reverse-search" data-case-id="${caseId}">Buscar con SerpApi</button>
+    <div class="tool-result" data-result-for="reverse-search" data-case-id="${caseId}"></div>
+  </div>
+  <div class="card" style="margin-top:14px; border-color:var(--risk-high);">
+    <strong style="font-size:12.5px; color:var(--text-dim);">🧑 Reconocimiento facial (PimEyes) — uso acotado</strong>
+    <p class="hint">Procesa un dato biométrico. Solo úsalo si tienes una base legal concreta para este caso (ej. documentar una usurpación de identidad para una denuncia — RGPD art. 9.2.f). La confirmación y el resultado quedan sellados de forma permanente en la cadena de integridad. Esto no es asesoría legal.</p>
+    <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); cursor:pointer;">
+      <input type="checkbox" class="pimeyes-confirm" data-case-id="${caseId}" style="width:16px; height:16px; accent-color:var(--accent); flex-shrink:0;" />
+      Confirmo que existe base legal para buscar esta cara en este caso concreto
+    </label>
+    <textarea class="pimeyes-notes" data-case-id="${caseId}" placeholder="Notas del caso (opcional) — quedan selladas junto con el resultado" style="margin-top:8px;"></textarea>
+    <button class="btn-secondary" data-action="facial-search" data-case-id="${caseId}" disabled style="margin-top:10px;">Buscar con PimEyes</button>
+    <div class="tool-result" data-result-for="facial-search" data-case-id="${caseId}"></div>
+  </div>`;
+}
+
+function toolResultHtml(toolLabel, badgeClass, data){
+  const header = `<div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+    <span class="badge ${badgeClass}">${toolLabel}</span>
+    <span class="hint" style="margin:0;">${(data.matches||[]).length} coincidencia(s)${data.requested_at ? ` · confirmado el ${new Date(data.requested_at).toLocaleString()}` : ''}</span>
+  </div>`;
+
+  if(data.errors && data.errors.length){
+    const linksHtml = Object.entries(data.reverse_search_links || {}).map(([name, url]) =>
+      `<a href="${url}" target="_blank" rel="noopener" class="btn-secondary" style="display:inline-block; text-decoration:none; margin:4px 6px 0 0; padding:6px 12px; font-size:12px;">${name} ↗</a>`
+    ).join('');
+    return header + `<p class="hint" style="color:var(--risk-medium)">${data.errors.join(' · ')}</p>${linksHtml ? `<div>${linksHtml}</div>` : ''}`;
+  }
+
+  const matchesHtml = (data.matches||[]).length
+    ? data.matches.map(m => `<div class="case-row"><span class="case-target"><a href="${m.url}" target="_blank" rel="noopener">${m.page_title || m.source || m.url}</a></span></div>`).join('')
+    : '<p class="hint">Sin coincidencias.</p>';
+
+  return header + matchesHtml + flagsTable(data.risk_flags);
+}
+
+document.getElementById('image-result').addEventListener('change', (ev) => {
+  if(!ev.target.classList.contains('pimeyes-confirm')) return;
+  const caseId = ev.target.dataset.caseId;
+  const btn = document.querySelector(`button[data-action="facial-search"][data-case-id="${caseId}"]`);
+  if(btn) btn.disabled = !ev.target.checked;
+});
+
+document.getElementById('image-result').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const caseId = btn.dataset.caseId;
+  const resultEl = document.querySelector(`.tool-result[data-result-for="${action}"][data-case-id="${caseId}"]`);
+  const originalText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Buscando…';
+  resultEl.innerHTML = '';
+  try{
+    let data;
+    if(action === 'reverse-search'){
+      data = await apiRequest(`/analysis/image/${caseId}/reverse-search`, {method:'POST'});
+      resultEl.innerHTML = toolResultHtml('SerpApi', 'medium', data);
+    }else if(action === 'facial-search'){
+      const notes = document.querySelector(`.pimeyes-notes[data-case-id="${caseId}"]`)?.value.trim();
+      const formData = new FormData();
+      formData.append('confirmed_legal_basis', 'true');
+      if(notes) formData.append('notes', notes);
+      data = await apiRequest(`/analysis/image/${caseId}/facial-search`, {method:'POST', body: formData});
+      resultEl.innerHTML = toolResultHtml('PimEyes', 'high', data);
+    }
+  }catch(err){
+    resultEl.innerHTML = `<p class="hint" style="color:var(--risk-high)">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
+// ============================================================
+// Monitorización continua
+// ============================================================
+document.getElementById('refresh-monitoring-btn').addEventListener('click', loadMonitoring);
+
+async function loadMonitoring(){
+  try{
+    const [alerts, subjects] = await Promise.all([apiRequest('/alerts'), apiRequest('/monitoring/subjects')]);
+    renderAlerts(alerts);
+    renderMonitoredSubjects(subjects);
+    document.getElementById('alerts-count').textContent = alerts.filter(a => !a.acknowledged).length;
+  }catch(err){
+    document.getElementById('list-alerts').innerHTML = `<p class="hint" style="color:var(--risk-high)">Error cargando: ${err.message}</p>`;
+    document.getElementById('list-monitored-subjects').innerHTML = '';
+  }
+}
+
+function renderAlerts(alerts){
+  const container = document.getElementById('list-alerts');
+  if(!alerts.length){ container.innerHTML = '<p class="empty-state">No hay alertas todavía — se generan cuando un sujeto monitorizado sube de nivel de riesgo en un re-chequeo.</p>'; return; }
+
+  container.innerHTML = alerts.map(a => {
+    const label = a.new_bucket === 'high' ? 'ALTA' : a.new_bucket === 'medium' ? 'MEDIA' : 'BAJA';
+    return `<div class="case-row" style="flex-direction:column; align-items:stretch; gap:6px; ${a.acknowledged ? 'opacity:0.55;' : ''}">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="badge ${a.new_bucket}">${label}</span>
+        <span class="case-target">${a.case_type} · ${a.identifier}</span>
+        ${a.acknowledged
+          ? '<span class="hint" style="margin:0 0 0 auto;">leída</span>'
+          : `<button class="btn-secondary" data-ack="${a.id}" style="margin-left:auto; padding:4px 10px; font-size:11.5px;">Marcar leída</button>`}
+      </div>
+      <div class="hint" style="margin:0;">${a.reason} · ${new Date(a.detected_at).toLocaleString()}</div>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('[data-ack]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try{ await apiRequest(`/alerts/${btn.dataset.ack}/acknowledge`, {method:'POST'}); }catch(err){ /* se refleja al recargar */ }
+      loadMonitoring();
+    });
+  });
+}
+
+function renderMonitoredSubjects(subjects){
+  const container = document.getElementById('list-monitored-subjects');
+  if(!subjects.length){ container.innerHTML = '<p class="empty-state">Todavía no hay nada monitorizado — analiza un dominio, wallet, teléfono, dominio protegido o búsqueda CNMV primero.</p>'; return; }
+
+  container.innerHTML = subjects.map(s => {
+    const lvl = s.last_bucket || 'low';
+    const label = lvl === 'high' ? 'ALTA' : lvl === 'medium' ? 'MEDIA' : 'BAJA';
+    const lastChecked = s.last_checked_at ? new Date(s.last_checked_at).toLocaleString() : 'nunca';
+    return `<div class="case-row">
+      <label style="display:flex; align-items:center; cursor:pointer;" title="Activar/desactivar monitorización">
+        <input type="checkbox" data-toggle="${s.id}" ${s.enabled ? 'checked' : ''} />
+      </label>
+      <span class="case-target">${s.case_type} · ${s.identifier}</span>
+      <span class="badge ${lvl}">${label}${s.last_score !== null ? ' · ' + s.last_score : ''}</span>
+      <span class="hint" style="margin:0; flex-shrink:0;">cada ${s.check_interval_hours}h · último: ${lastChecked}</span>
+      <button class="btn-secondary" data-check="${s.id}" style="padding:4px 10px; font-size:11.5px; flex-shrink:0;">Comprobar ahora</button>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('[data-toggle]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      try{
+        await apiRequest(`/monitoring/subjects/${cb.dataset.toggle}`, {
+          method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({enabled: cb.checked})
+        });
+      }catch(err){ cb.checked = !cb.checked; }
+    });
+  });
+  container.querySelectorAll('[data-check]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Comprobando…';
+      try{ await apiRequest(`/monitoring/subjects/${btn.dataset.check}/check-now`, {method:'POST'}); }catch(err){ /* se refleja al recargar */ }
+      loadMonitoring();
+    });
+  });
+}
+
+// ============================================================
+// Casos guardados
+// ============================================================
+document.getElementById('refresh-cases-btn').addEventListener('click', loadCases);
+
+async function loadCases(){
+  try{
+    const [domains, emails, wallets, typosquatting, phones, cnmv, images, ips] = await Promise.all([
+      apiRequest('/cases'), apiRequest('/email-cases'), apiRequest('/wallet-cases'), apiRequest('/typosquatting-cases'), apiRequest('/phone-cases'), apiRequest('/cnmv-check-cases'), apiRequest('/image-cases'), apiRequest('/ip-cases')
+    ]);
+    state.casesCache = { domain: domains, email: emails, wallet: wallets, typosquatting, phone: phones, cnmv, image: images, ip: ips };
+    renderCaseList('domain', domains, c => c.domain);
+    renderCaseList('email', emails, c => c.from_address || '(sin remitente)');
+    renderCaseList('wallet', wallets, c => `${c.address} (${c.chain})`);
+    renderCaseList('typosquatting', typosquatting, c => `${c.domain} (${c.resolved_count} activas)`);
+    renderCaseList('phone', phones, c => `${c.raw_phone} (${c.line_type || '?'})`);
+    renderCaseList('cnmv', cnmv, c => `"${c.query}" (${c.match_count} coincidencia${c.match_count===1?'':'s'})`);
+    renderCaseList('image', images, c => c.filename || '(sin nombre)');
+    renderCaseList('ip', ips, c => c.ip);
+    document.getElementById('cases-count').textContent = domains.length + emails.length + wallets.length + typosquatting.length + phones.length + cnmv.length + images.length + ips.length;
+  }catch(err){
+    ['domain','email','wallet','typosquatting','phone','cnmv','image','ip'].forEach(t => {
+      document.getElementById('list-' + t).innerHTML = `<p class="hint" style="color:var(--risk-high)">Error cargando: ${err.message}</p>`;
+    });
+  }
+}
+
+function renderCaseList(type, items, labelFn){
+  const container = document.getElementById('list-' + type);
+  if(!items.length){ container.innerHTML = '<p class="empty-state">Todavía no hay casos de este tipo.</p>'; return; }
+  container.innerHTML = items.map(c => {
+    const lvl = riskLevel(c.risk_score).key;
+    const label = lvl === 'high' ? 'ALTA' : lvl === 'medium' ? 'MEDIA' : 'BAJA';
+    const checked = state.selected[type].has(c.id) ? 'checked' : '';
+    return `<label class="case-row">
+      <input type="checkbox" data-type="${type}" data-id="${c.id}" ${checked} />
+      <span class="case-target">${labelFn(c)}</span>
+      <span class="case-id">#${c.id}</span>
+      <span class="badge ${lvl}">${label} · ${c.risk_score}</span>
+    </label>`;
+  }).join('');
+
+  container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = Number(cb.dataset.id);
+      if(cb.checked) state.selected[type].add(id); else state.selected[type].delete(id);
+      updateSelectedCount();
+    });
+  });
+}
+
+function updateSelectedCount(){
+  const total = state.selected.domain.size + state.selected.email.size + state.selected.wallet.size + state.selected.typosquatting.size + state.selected.phone.size + state.selected.cnmv.size + state.selected.image.size + state.selected.ip.size;
+  document.getElementById('selected-count').textContent = total;
+}
+
+// ============================================================
+// Informe
+// ============================================================
+function renderSelectionSummary(){
+  const el = document.getElementById('selection-summary');
+  el.innerHTML = `
+    <span class="selection-chip">Dominios: ${state.selected.domain.size}</span>
+    <span class="selection-chip">Emails: ${state.selected.email.size}</span>
+    <span class="selection-chip">Wallets: ${state.selected.wallet.size}</span>
+    <span class="selection-chip">Typosquatting: ${state.selected.typosquatting.size}</span>
+    <span class="selection-chip">Teléfonos: ${state.selected.phone.size}</span>
+    <span class="selection-chip">CNMV: ${state.selected.cnmv.size}</span>
+    <span class="selection-chip">Imágenes: ${state.selected.image.size}</span>
+    <span class="selection-chip">IPs: ${state.selected.ip.size}</span>
+  `;
+}
+
+function selectedPayload(){
+  return {
+    domain_case_ids: [...state.selected.domain],
+    email_case_ids: [...state.selected.email],
+    wallet_case_ids: [...state.selected.wallet],
+    typosquatting_case_ids: [...state.selected.typosquatting],
+    phone_case_ids: [...state.selected.phone],
+    cnmv_check_case_ids: [...state.selected.cnmv],
+    image_case_ids: [...state.selected.image],
+    ip_case_ids: [...state.selected.ip],
+    victim_notes: document.getElementById('victim-notes').value.trim() || null,
+  };
+}
+
+document.getElementById('ai-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('ai-btn');
+  const statusEl = document.getElementById('ai-status');
+  const narrativeEl = document.getElementById('ai-narrative');
+  const payload = { ...selectedPayload(), include_ai_narrative: true };
+  if(!payload.domain_case_ids.length && !payload.email_case_ids.length && !payload.wallet_case_ids.length){
+    statusEl.innerHTML = '<p class="status-line error">Selecciona al menos un caso en "Casos guardados" primero.</p>';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Generando…';
+  statusEl.innerHTML = ''; narrativeEl.innerHTML = '';
+  try{
+    const data = await apiRequest('/analysis/consolidated', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    statusEl.innerHTML = `<p class="status-line ok">Score consolidado: ${data.consolidated_score}/100${data.correlation_flags.length ? ' · ' + data.correlation_flags.length + ' correlación(es) detectada(s)' : ''}</p>`;
+    if(data.ai_narrative){
+      state.aiNarrative = data.ai_narrative;
+      narrativeEl.innerHTML = `<div class="narrative-box">${data.ai_narrative}</div>`;
+    } else {
+      narrativeEl.innerHTML = `<p class="status-line error">Sin narrativa: ${data.ai_narrative_error || 'motivo desconocido'}</p>`;
+    }
+  }catch(err){
+    statusEl.innerHTML = `<p class="status-line error">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Generar valoración con IA';
+  }
+});
+
+document.getElementById('report-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('report-btn');
+  const statusEl = document.getElementById('report-status');
+  const payload = { ...selectedPayload(), ai_narrative: state.aiNarrative };
+  if(!payload.domain_case_ids.length && !payload.email_case_ids.length && !payload.wallet_case_ids.length){
+    statusEl.innerHTML = '<p class="status-line error">Selecciona al menos un caso en "Casos guardados" primero.</p>';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Generando PDF…';
+  statusEl.innerHTML = '';
+  try{
+    const res = await fetch(apiBase() + '/reports/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const body = await res.json().catch(() => null);
+      throw new Error(body && body.detail ? body.detail : `Error ${res.status}`);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'informe_scamshield.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    statusEl.innerHTML = '<p class="status-line ok">Informe descargado correctamente.</p>';
+  }catch(err){
+    statusEl.innerHTML = `<p class="status-line error">Error: ${err.message}</p>`;
+  }finally{
+    btn.disabled = false; btn.textContent = '⬇ Descargar informe PDF';
+  }
+});
+
+// Si la página se sirve desde el propio backend (no abierta como archivo
+// local con doble clic), usar el mismo origen por defecto en vez del
+// 127.0.0.1 de desarrollo. Así funciona igual en local, en la LAN o en
+// el dominio público, sin tocar nada a mano.
+if (location.protocol !== 'file:') {
+  document.getElementById('api-base').value = location.origin;
+}
+
+// Carga inicial
+loadCases();
+loadMonitoring();
+</script>
+</body>
+</html>
