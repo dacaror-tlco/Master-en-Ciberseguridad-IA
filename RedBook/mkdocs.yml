@@ -1,0 +1,221 @@
+site_name: RedBook
+site_description: El Libro Rojo — crónicas y metodología del máster de ciberseguridad
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: es
+  font: false
+  icon:
+    logo: material/book-open-variant
+    repo: material/github
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: red
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: red
+      toggle:
+        icon: material/weather-night
+        name: Modo oscuro
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+plugins:
+  - search:
+      lang: es
+  - tags
+
+extra_css:
+  - assets/fonts/fonts.css
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+- Inicio: index.md
+- Guía de máquina: guia-maquina.md
+- Metodología:
+  - Metodología por fases: metodologias/index.md
+  - Selector de metodología: metodologias/selector.md
+  - Fases:
+    - metodologias/fases/reconocimiento.md
+    - metodologias/fases/enumeracion.md
+    - metodologias/fases/analisis.md
+    - metodologias/fases/explotacion-web.md
+    - metodologias/fases/explotacion-servicios.md
+    - metodologias/fases/post-explotacion.md
+    - metodologias/fases/informe.md
+  - Estándares y clasificación:
+    - metodologias/estandares/index.md
+    - OWASP CVSS CWE CVE: metodologias/estandares/owasp-cvss-cwe-cve.md
+- Walkthroughs:
+  - red-team/walkthroughs/index.md
+  - red-team/walkthroughs/web.md
+  - red-team/walkthroughs/windows.md
+  - red-team/walkthroughs/linux.md
+- Chuletas:
+  - chuletas/index.md
+  - chuletas/reconocimiento-enumeracion.md
+  - chuletas/explotacion.md
+  - chuletas/sqli-union.md
+  - chuletas/ssti.md
+  - chuletas/ssrf.md
+  - chuletas/path-traversal.md
+  - chuletas/osint-estego.md
+  - chuletas/escalada.md
+  - chuletas/forense.md
+  - chuletas/fundamentos.md
+- Herramientas:
+  - herramientas/index.md
+  - herramientas/recon.md
+  - herramientas/enum-red.md
+  - herramientas/enum-web.md
+  - herramientas/proxy.md
+  - herramientas/explotacion.md
+  - herramientas/credenciales.md
+  - herramientas/post.md
+  - herramientas/shells.md
+  - herramientas/forense.md
+- Apuntes:
+  - Red Team:
+    - red-team/index.md
+    - Auditoría web:
+      - red-team/web/index.md
+      - Auditoria Web Desde 0: red-team/web/auditoria-web-desde-0.md
+      - Auditoria Web LFI Escalada Linux: red-team/web/auditoria-web-lfi-escalada-linux.md
+      - Bounty: red-team/web/bounty.md
+      - CMS: red-team/web/cms.md
+      - Enumeracion Web: red-team/web/enumeracion-web.md
+      - File Upload Bounty: red-team/web/file-upload-bounty.md
+      - Fuzzing Parametros x 8: red-team/web/fuzzing-parametros-x-8.md
+      - Fuzzing Web: red-team/web/fuzzing-web.md
+      - Manual SQL especifico: red-team/web/manual-sql-especifico.md
+      - OWASP API Top 10: red-team/web/owasp-api-top-10.md
+      - OWASP API Top 10 Labs: red-team/web/owasp-api-top-10-labs.md
+      - PortSwigger Introduccion y Path Traversal: red-team/web/portswigger-introduccion-y-path-traversal.md
+      - PortSwigger SQLi I: red-team/web/portswigger-sqli-i.md
+      - PortSwigger SSRF cierre SSTI: red-team/web/portswigger-ssrf-cierre-ssti.md
+      - Repaso Enumeracion Web: red-team/web/repaso-enumeracion-web.md
+      - Repaso Semanal III SSRF: red-team/web/repaso-semanal-iii-ssrf.md
+      - SQL Injection: red-team/web/sql-injection.md
+      - SQL Injection manual: red-team/web/sql-injection-manual.md
+      - SQL despliegue seguro y consultas: red-team/web/sql-despliegue-seguro-y-consultas.md
+      - SQLi Inyecciones Labs Avanzado III: red-team/web/sqli-inyecciones-labs-avanzado-iii.md
+      - SQLi Inyecciones Labs I: red-team/web/sqli-inyecciones-labs-i.md
+      - SQLi y fundamentos de SQL: red-team/web/sqli-y-fundamentos-de-sql.md
+      - SSRF PortSwigger: red-team/web/ssrf-portswigger.md
+      - SSTI PortSwigger: red-team/web/ssti-portswigger.md
+      - Sesion 29 OWASP Web Burp: red-team/web/sesion-29-owasp-web-burp.md
+      - Sesion 30 Burp WordPress: red-team/web/sesion-30-burp-wordpress.md
+    - Explotación y escalada:
+      - red-team/explotacion/index.md
+      - Explotacion Maquinas Locales I: red-team/explotacion/explotacion-maquinas-locales-i.md
+      - Explotacion Servicios III: red-team/explotacion/explotacion-servicios-iii.md
+      - Sesion 23 Explotacion Servicios Vulnerables II: red-team/explotacion/sesion-23-explotacion-servicios-vulnerables-ii.md
+    - Máquinas y prácticas:
+      - red-team/maquinas/index.md
+      - Auditoria WordPress Academy: red-team/maquinas/auditoria-wordpress-academy.md
+      - CMS y Curling: red-team/maquinas/cms-y-curling.md
+      - Facultad: red-team/maquinas/facultad.md
+      - HTB Starting Point Tier 0: red-team/maquinas/htb-starting-point-tier-0.md
+      - HTB Starting Point Tier 1: red-team/maquinas/htb-starting-point-tier-1.md
+      - HTB Tier 1 Responder Three: red-team/maquinas/htb-tier-1-responder-three.md
+      - HTB Tier 2: red-team/maquinas/htb-tier-2.md
+      - Magic: red-team/maquinas/magic.md
+      - Nibbles - Apuntes: red-team/maquinas/nibbles-apuntes.md
+      - Nibbles HTB: red-team/maquinas/nibbles-htb.md
+      - Practica 1 Webos Castillo Gomez: red-team/maquinas/practica-1-webos-castillo-gomez.md
+      - Repaso Metodologia Web SSTI CasaPaco: red-team/maquinas/repaso-metodologia-web-ssti-casapaco.md
+      - Repaso Semanal Vaccine Oopsie: red-team/maquinas/repaso-semanal-vaccine-oopsie.md
+      - Repaso semanal VII - Devel: red-team/maquinas/repaso-semanal-vii-devel.md
+      - Rockstar Escalada Linux LFI: red-team/maquinas/rockstar-escalada-linux-lfi.md
+      - SSTI y evidencias web - GoodGames: red-team/maquinas/ssti-y-evidencias-web-goodgames.md
+      - Sesion 26 Mr. Robot II Evolve: red-team/maquinas/sesion-26-mr-robot-ii-evolve.md
+      - Sesion 27 XXE LFI Nike: red-team/maquinas/sesion-27-xxe-lfi-nike.md
+      - Sesion Reactor HTB: red-team/maquinas/sesion-reactor-htb.md
+      - Son ROBOTS: red-team/maquinas/son-robots.md
+      - Vaccine: red-team/maquinas/vaccine.md
+      - Vaccine Repaso: red-team/maquinas/vaccine-repaso.md
+    - OSINT e ingeniería social:
+      - red-team/osint/index.md
+      - Anonimato Ingenieria Social Rockstar: red-team/osint/anonimato-ingenieria-social-rockstar.md
+      - OSINT Imagen Stego: red-team/osint/osint-imagen-stego.md
+      - OSINT Superficie: red-team/osint/osint-superficie.md
+    - Repasos:
+      - red-team/repasos/index.md
+      - Repaso General II: red-team/repasos/repaso-general-ii.md
+      - Repaso semanal VI: red-team/repasos/repaso-semanal-vi.md
+  - Blue Team:
+    - blue-team/index.md
+    - Análisis de tráfico:
+      - blue-team/analisis-trafico/index.md
+      - Wireshark: blue-team/analisis-trafico/wireshark.md
+  - Otros:
+    - otros/index.md
+    - Fundamentos:
+      - otros/fundamentos/index.md
+      - Bash Comandos Avanzados: otros/fundamentos/bash-comandos-avanzados.md
+      - Bash Scripting: otros/fundamentos/bash-scripting.md
+      - Fundamentos Linux: otros/fundamentos/fundamentos-linux.md
+      - Intro Consolas Bash PS: otros/fundamentos/intro-consolas-bash-ps.md
+      - Intro Redes: otros/fundamentos/intro-redes.md
+      - Manual VBox a VMware: otros/fundamentos/manual-vbox-a-vmware.md
+      - Redes Typos Datagramas: otros/fundamentos/redes-typos-datagramas.md
+    - General:
+      - otros/general/index.md
+      - Formacion Mercado: otros/general/formacion-mercado.md
+      - Glosario Ciberseguridad: otros/general/glosario-ciberseguridad.md
+      - Sesion 25 Evolve: otros/general/sesion-25-evolve.md
+      - Sesión 2026-09-17: otros/general/apuntes-17-09-2026-carlos-castillo.md
+    - Informes:
+      - otros/informes/index.md
+      - Report: otros/informes/report.md
+      - Report (2026-09-21): otros/informes/report-2026-09-21.md
+    - Inteligencia artificial:
+      - otros/ia/index.md
+      - IA De los cimientos a la cima: otros/ia/ia-de-los-cimientos-a-la-cima.md
+      - IA Introduccion y Vibe Coding: otros/ia/ia-introduccion-y-vibe-coding.md
+      - IA Practica 1 Grafos Subagentes Infraestructura: otros/ia/ia-practica-1-grafos-subagentes-infraestructura.md
+      - IA Redes Neuronales: otros/ia/ia-redes-neuronales.md
+      - IA hibrida, agentes y SQL Injection: otros/ia/ia-hibrida-agentes-y-sql-injection.md
+  - Módulos del máster: master/index.md
+- Etiquetas: tags.md

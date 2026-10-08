@@ -1,0 +1,196 @@
+/* ===========================================================================
+   RedBook — El Libro Rojo de la Frontera del Oeste
+   Tema: pergamino, oro y rojo oscuro, con aire de El Señor de los Anillos.
+   =========================================================================== */
+
+/* ---- Paleta: modo claro (pergamino) ---- */
+:root {
+  --rb-gold: #b6862c;
+  --rb-gold-soft: #d9b45a;
+  --rb-red: #8c1c13;
+  --rb-red-bright: #c0392b;
+  --rb-ink: #2e2416;
+  --rb-parchment: #f3e9d2;
+  --rb-parchment-2: #ece0c4;
+
+  --md-primary-fg-color: var(--rb-red);
+  --md-primary-fg-color--light: #a83228;
+  --md-primary-fg-color--dark: #5e120c;
+  --md-accent-fg-color: var(--rb-gold);
+  --md-accent-fg-color--transparent: rgba(182, 134, 44, .1);
+
+  --md-default-bg-color: #f6eedb;
+  --md-default-fg-color: var(--rb-ink);
+  --md-typeset-a-color: #8a1a11;
+}
+
+/* ---- Paleta: modo oscuro (Mordor) ---- */
+[data-md-color-scheme="slate"] {
+  --rb-gold: #e2b85a;
+  --rb-gold-soft: #f0d08a;
+  --rb-red: #e5484d;
+
+  --md-hue: 220;
+  --md-default-bg-color: #0c0b0a;
+  --md-default-fg-color: #e9e2d0;
+  --md-default-fg-color--light: #c7bfad;
+  --md-primary-fg-color: #1a1512;
+  --md-accent-fg-color: var(--rb-gold);
+  --md-typeset-a-color: var(--rb-gold);
+  --md-code-bg-color: #16130f;
+}
+
+/* ---- Tipografía ---- */
+:root {
+  --md-text-font: "EB Garamond", Georgia, "Times New Roman", serif;
+}
+body, .md-typeset {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: .78rem;
+}
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-header__title,
+.md-nav__title {
+  font-family: "Cinzel", Georgia, serif;
+  letter-spacing: .02em;
+}
+.md-typeset h1 {
+  font-weight: 700;
+  color: var(--md-primary-fg-color);
+}
+[data-md-color-scheme="slate"] .md-typeset h1 { color: var(--rb-gold); }
+.md-typeset h2 {
+  font-weight: 600;
+  border-bottom: 2px solid var(--md-accent-fg-color);
+  padding-bottom: .2rem;
+}
+
+/* ---- Cabecera con textura ---- */
+.md-header {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.25), transparent 40%),
+    var(--md-primary-fg-color);
+  box-shadow: 0 2px 0 var(--rb-gold), 0 3px 12px rgba(0,0,0,.35);
+}
+.md-header__title { font-weight: 700; }
+.md-tabs {
+  background: linear-gradient(180deg, rgba(0,0,0,.18), transparent);
+  border-top: 1px solid rgba(182,134,44,.35);
+}
+.md-tabs__link { font-family: "Cinzel", serif; font-size: .7rem; opacity: .9; }
+.md-tabs__link--active, .md-tabs__link:hover { opacity: 1; color: var(--rb-gold-soft); }
+
+/* ---- Enlaces ---- */
+.md-typeset a { text-decoration-color: rgba(182,134,44,.5); }
+.md-typeset a:hover { color: var(--md-accent-fg-color); }
+
+/* ---- Tarjetas ---- */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid.cards > :is(.card) {
+  border: 1px solid rgba(182,134,44,.35);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(182,134,44,.05), transparent);
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.md-typeset .grid.cards > ul > li:hover {
+  border-color: var(--md-accent-fg-color);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(0,0,0,.22);
+}
+.md-typeset .grid.cards .twemoji svg {
+  width: 1.7em; height: 1.7em; fill: var(--md-accent-fg-color);
+}
+
+/* ---- Tablas de decisión ---- */
+.md-typeset table:not([class]) th {
+  background: var(--md-primary-fg-color);
+  color: #f3e9d2;
+  font-family: "Cinzel", serif;
+  font-weight: 600;
+}
+.md-typeset table:not([class]) tr:hover { background: rgba(182,134,44,.08); }
+
+/* ---- Admoniciones con sello dorado ---- */
+.md-typeset .admonition, .md-typeset details {
+  border-left: .25rem solid var(--md-accent-fg-color);
+  border-radius: 8px;
+}
+
+/* ---- Checklists ---- */
+.md-typeset .task-list-item { margin-bottom: .2rem; }
+.md-typeset .task-list-control .task-list-indicator::before {
+  background-color: var(--md-accent-fg-color);
+}
+
+/* ---- Metadatos de nota ---- */
+.note-meta { color: var(--md-default-fg-color--light); font-size: .8rem; margin-top: -.6rem; }
+
+/* ===========================================================================
+   Portada (home)
+   =========================================================================== */
+.rb-hero {
+  position: relative;
+  margin: -1.2rem -.8rem 2rem;
+  padding: 3.2rem 1.2rem 2.6rem;
+  text-align: center;
+  color: #f3e9d2;
+  background:
+    radial-gradient(1200px 300px at 50% -10%, rgba(182,134,44,.35), transparent),
+    radial-gradient(800px 400px at 50% 120%, rgba(140,28,19,.5), transparent),
+    linear-gradient(160deg, #1a1210, #0c0b0a 70%);
+  border-bottom: 2px solid var(--rb-gold);
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+}
+.rb-hero::before {
+  /* anillo tenue de fondo */
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 50% 46%, transparent 118px, rgba(182,134,44,.22) 120px, transparent 128px),
+    radial-gradient(circle at 50% 46%, transparent 150px, rgba(182,134,44,.12) 152px, transparent 162px);
+  pointer-events: none;
+}
+.rb-hero .rb-kicker {
+  font-family: "Cinzel", serif; letter-spacing: .35em; text-transform: uppercase;
+  font-size: .62rem; color: var(--rb-gold-soft); opacity: .9;
+}
+.rb-hero h1, .rb-hero .rb-title {
+  font-family: "Cinzel Decorative", "Cinzel", serif;
+  font-size: 2.8rem; font-weight: 700; margin: .3rem 0 .2rem;
+  color: var(--rb-gold-soft);
+  text-shadow: 0 2px 20px rgba(182,134,44,.35);
+  border: 0;
+}
+.rb-hero .rb-tagline {
+  font-family: "EB Garamond", serif; font-style: italic;
+  font-size: 1.15rem; color: #e6dcc4; margin: 0 auto .4rem; max-width: 40ch;
+}
+.rb-verse {
+  font-family: "EB Garamond", serif; font-style: italic;
+  color: var(--rb-gold-soft); opacity: .85;
+  font-size: .95rem; line-height: 1.5; margin: 1rem auto 0; max-width: 46ch;
+}
+.rb-verse .rb-strong { color: #f0d08a; font-weight: 600; }
+
+@media (max-width: 44.9em) {
+  .rb-hero h1, .rb-hero .rb-title { font-size: 2rem; }
+}
+
+/* Botón principal de la portada */
+.md-typeset .rb-cta {
+  display: inline-block; margin-top: 1.2rem;
+  font-family: "Cinzel", serif; font-weight: 600; letter-spacing: .04em;
+  padding: .6rem 1.4rem; border-radius: 10px;
+  color: #1a1210; background: linear-gradient(180deg, var(--rb-gold-soft), var(--rb-gold));
+  border: 1px solid var(--rb-gold-soft);
+  box-shadow: 0 6px 18px rgba(182,134,44,.35);
+}
+.md-typeset .rb-cta:hover { color: #000; transform: translateY(-1px); filter: brightness(1.05); }
+
+/* ---- Footer ---- */
+.md-footer-meta { background: #120e0b; }
+.md-footer { border-top: 2px solid var(--rb-gold); }

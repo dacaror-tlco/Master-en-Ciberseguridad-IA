@@ -1,0 +1,34 @@
+# RedBook — stack para Portainer (puerto 8093)
+#
+# El stack se autocompila al desplegar: no hay que compilar a mano ni usar Dockerfile.
+#   - redbook-build: genera site/ desde docs/ y termina
+#   - web-redbook:   nginx sirve site/ cuando el build acaba bien
+#
+# Requisitos (una sola vez): tener la carpeta del proyecto en /mnt/hdd/webs/RedBook.
+#
+# Flujo al cambiar apuntes:
+#   1) scp de la carpeta a /mnt/hdd/webs/RedBook
+#   2) En Portainer: Recreate el stack  (vuelve a compilar y servir)
+# Queda en http://<ip-pi>:8093
+
+services:
+  redbook-build:
+    image: squidfunk/mkdocs-material:9.5.39
+    container_name: redbook-build
+    working_dir: /docs
+    volumes:
+      - /mnt/hdd/webs/RedBook:/docs
+    command: build --clean
+    restart: "no"
+
+  web-redbook:
+    image: nginx:alpine
+    container_name: web-redbook
+    restart: unless-stopped
+    depends_on:
+      redbook-build:
+        condition: service_completed_successfully
+    ports:
+      - "8093:80"
+    volumes:
+      - /mnt/hdd/webs/RedBook/site:/usr/share/nginx/html:ro
