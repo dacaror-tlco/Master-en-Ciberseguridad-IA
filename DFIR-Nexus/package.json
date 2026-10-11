@@ -1,0 +1,16 @@
+{
+  "name": "dfir-nexus",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Orquestador de desarrollo local de DFIR Nexus. No es un backend ni fusiona los cinco módulos: solo arranca en paralelo los procesos ya existentes (ver docs/INTEGRACION_Y_DESPLIEGUE.md).",
+  "workspaces": [
+    "frontend",
+    "scam-shield/frontend"
+  ],
+  "scripts": {
+    "dev:all": "concurrently -k -n CASOS,OSINT,TRACKING,TIMELINE,INFORMES,FRONTEND -c \"#4f8fea,#c24fea,#3fbf6f,#d0a02a,#3fb8bf,#e0e0e0\" \"node scripts/run-backend.mjs backend 8000\" \"node scripts/run-backend.mjs scam-shield 8124\" \"node scripts/run-backend.mjs track-inc 8001\" \"node scripts/run-backend.mjs timeline 8002\" \"node scripts/run-backend.mjs sharingan 8003\" \"npm --prefix frontend run dev -- --port 5173 --strictPort\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

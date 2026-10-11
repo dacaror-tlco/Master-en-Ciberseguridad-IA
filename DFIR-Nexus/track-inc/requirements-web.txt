@@ -1,0 +1,17 @@
+# Dependencias de la aplicación web (lo único que necesita el despliegue).
+# El Dockerfile instala solo este fichero.
+#
+# Versiones FIJADAS, como en los módulos de Casos y Timeline: con rangos
+# abiertos (>=) dos compañeros podían instalar versiones distintas del mismo
+# proyecto y ver comportamientos distintos. Para subir una, se cambia aquí.
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+sqlalchemy==2.0.52
+pymysql==1.2.0
+python-dotenv==1.2.3
+alembic==1.19.1
+pydantic==2.13.5
+pyyaml==6.0.3
+python-multipart==0.0.32
+# Verificacion de los JWT que emite Casos (Fase 4 de development).
+pyjwt==2.15.0

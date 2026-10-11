@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <span class="agent-id-badge">agent_id: {{ agent_id }}</span>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-value">{{ total }}</div>
+        <div class="stat-label">Evidencias totales</div>
+    </div>
+    <div class="stat-card {{ 'stat-card-warning' if pending_count > 0 }}">
+        <div class="stat-value">{{ pending_count }}</div>
+        <div class="stat-label">Pendientes de sincronizar</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ last_seq + 1 if last_seq >= 0 else 0 }}</div>
+        <div class="stat-label">Eslabones en la cadena</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ "Real" if sync_configured else "Mock" }}</div>
+        <div class="stat-label">Transporte de sincronización</div>
+    </div>
+</div>
+
+<div class="panel-grid">
+    <div class="panel">
+        <h2>Por criticidad</h2>
+        <table class="simple-table">
+            {% for level, count in counts_by_criticality.items() %}
+            <tr>
+                <td><span class="badge badge-{{ level|lower }}">{{ level }}</span></td>
+                <td class="text-right">{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Por origen</h2>
+        <table class="simple-table">
+            {% for source, count in counts_by_source.items() %}
+            <tr>
+                <td>{{ source }}</td>
+                <td class="text-right">{{ count }}</td>
+            </tr>
+            {% else %}
+            <tr><td class="text-muted">Sin evidencias todavía.</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Acciones</h2>
+    <div class="action-row">
+        <form method="post" action="{{ url_for('verify') }}">
+            <button type="submit" class="btn btn-primary">🔍 Verificar integridad de la cadena</button>
+        </form>
+        <form method="post" action="{{ url_for('sync_now') }}">
+            <button type="submit" class="btn btn-secondary">🔄 Sincronizar ahora</button>
+        </form>
+    </div>
+    <p class="hint">
+        Último hash conocido: <code>{{ last_hash[:24] }}...</code>
+    </p>
+</div>
+{% endblock %}

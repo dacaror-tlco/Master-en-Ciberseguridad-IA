@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=8.3.3
+httpx>=0.27.0
+# Solo para los tests: extraer el texto del PDF generado y comprobar que
+# contiene lo que un informe pericial tiene que contener.
+pypdf>=5.1.0

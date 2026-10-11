@@ -1,0 +1,486 @@
+# Reglas de clasificación de criticidad.
+#
+# Se evalúan TODAS: gana la de mayor criticidad y, a igualdad, la que aparece
+# antes en este fichero. Las demás que casen se devuelven también (`reglas`).
+# Este fichero es la fuente de reglas que carga el Módulo 3: lo lee
+# `agent/classifier/loader.py` a través de RULES_PATH en
+# `app/modules/tracking/service.py`. Editarlo basta para cambiar la
+# clasificación, sin reiniciar: se recarga cuando cambia.
+# `DEFAULT_RULES` en engine.py es solo el respaldo por si falta el YAML.
+#
+# Candidatos de una condición de lista:
+#   - subcadena:  "net user"
+#   - regex:      're:\bsc(\.exe)?\s+create\b'   (prefijo re:, entre comillas
+#                 simples para que YAML no interprete las barras)
+# Ambos se comparan con el comando NORMALIZADO: en minúsculas, sin ^ " ' `
+# y con los espacios reducidos a uno (neutraliza n^et user, "net" user...).
+#
+# `mitre`: técnicas MITRE ATT&CK que representa la regla (opcional).
+
+rules:
+  # --- Reglas del motor de captura en vivo (agent/) ---------------------------
+  - name: borrado_de_logs
+    criticality: CRITICAL
+    mitre: [T1070.001]
+    descripcion: >-
+      Eliminación de ficheros de registro del sistema.
+      Suele indicar que el atacante intenta borrar sus huellas antes de que alguien revise el equipo.
+    conditions:
+      source: filesystem
+      event_type: deleted
+      payload.path: ["/var/log", "\\logs\\", "eventlog"]
+
+  - name: modificacion_binario_sistema
+    criticality: CRITICAL
+    mitre: [T1554]
+    descripcion: >-
+      Modificación de un ejecutable del sistema operativo.
+      Técnica de persistencia y evasión: el binario legítimo pasa a ejecutar código del atacante.
+    conditions:
+      source: filesystem
+      event_type: modified
+      payload.path: ["/bin/", "/usr/bin/", "system32"]
+
+  - name: ejecucion_desde_temporal
+    criticality: HIGH
+    mitre: [T1204.002]
+    descripcion: >-
+      Ejecución de un binario desde una carpeta temporal.
+      El software legítimo no suele instalarse ahí; es la ubicación habitual de payloads descargados.
+    conditions:
+      source: process
+      event_type: exec
+      payload.path: ["/tmp/", "\\temp\\", "\\appdata\\local\\temp"]
+
+  - name: conexion_saliente_sospechosa
+    criticality: HIGH
+    mitre: [T1071]
+    descripcion: >-
+      Conexión hacia un destino marcado como sospechoso.
+      Puede ser tráfico de mando y control (C2) o el canal por el que se extraen datos.
+    conditions:
+      source: network
+      event_type: connection
+      payload.flagged: true
+
+  - name: cambio_permisos
+    criticality: MEDIUM
+    mitre: [T1222]
+    descripcion: >-
+      Cambio de permisos sobre ficheros o directorios.
+      Por sí solo es común, pero acompañado de otros eventos puede indicar preparación de acceso persistente.
+    conditions:
+      source: filesystem
+      event_type: permission_changed
+
+  # --- Reglas para logs de comandos (CU-03: Módulo 3 / Tracking) --------------
+  - name: borrado_evidencias_o_shadow_copies
+    criticality: CRITICAL
+    mitre: [T1490, T1070.001, T1070.003]
+    descripcion: >-
+      Destrucción de copias de seguridad, del registro de eventos o de la capacidad de recuperación del sistema.
+      Es el paso previo típico de un ransomware, y además impide la recuperación y el análisis posterior.
+    conditions:
+      source: log
+      payload.command:
+        - "vssadmin delete shadows"
+        - "wevtutil cl"
+        - "clear-eventlog"
+        - "wbadmin delete"
+        - "fsutil usn deletejournal"
+        - 're:\bwmic(\.exe)?\b.*\bshadowcopy\s+delete\b'
+        - 're:\bbcdedit(\.exe)?\b.*recoveryenabled\s+no\b'
+        - 're:\bremove-item\b.*\.evtx\b'
+        # equivalentes en Linux: registro del sistema e historial de la shell
+        - "unset histfile"
+        - 're:\bhistory\s+-c\b'
+        - 're:\bhistfile(size)?=\s*(/dev/null|0)\b'
+        - 're:\b(rm|shred|truncate)\b.*\s/var/log/'
+        - 're:>\s*/var/log/'
+        - 're:\bjournalctl\b.*--vacuum-(time|size)='
+
+  - name: powershell_ofuscado_o_descarga_remota
+    criticality: CRITICAL
+    mitre: [T1059.001, T1027]
+    descripcion: >-
+      PowerShell con la orden codificada en base64 (-EncodedCommand o cualquiera de sus abreviaturas: -e, -ec, -enc…),
+      con la ventana oculta, o descargando y ejecutando código en memoria.
+      La ofuscación busca evitar la detección y que el comando real no quede legible en los logs.
+    conditions:
+      source: log
+      payload.command:
+        - "-encodedcommand"
+        - "downloadstring"
+        - "invoke-expression"
+        - 're:\biex\b\s*[($]'
+        - 're:\b(powershell|pwsh)(\.exe)?\b.*\s[-/]e[a-z]*\s+[a-z0-9+/=]{16,}'
+        - 're:\b(powershell|pwsh)(\.exe)?\b.*\s[-/]w(indowstyle)?\s+hidden\b'
+
+  - name: herramienta_post_explotacion
+    criticality: CRITICAL
+    mitre: [T1003, T1570]
+    descripcion: >-
+      Uso de una herramienta conocida de post-explotación (volcado de credenciales, movimiento lateral, marcos de C2,
+      reconocimiento de Active Directory).
+      Indica que el atacante ya tiene acceso y está ampliándolo.
+    conditions:
+      source: log
+      payload.command:
+        - "mimikatz"
+        - "sekurlsa"
+        - "rubeus"
+        - "lazagne"
+        - 're:\b(psexec|paexec)(64)?(\.exe)?\b'
+        - 're:\bcobalt\s*strike\b'
+        - 're:\b(sharphound|bloodhound)\b'
+
+  - name: volcado_de_credenciales
+    criticality: CRITICAL
+    mitre: [T1003.001, T1003.002, T1003.003]
+    descripcion: >-
+      Extracción de credenciales: volcado de la memoria de LSASS, copia de las colmenas SAM/SYSTEM/SECURITY del registro
+      o de la base de datos de Active Directory (NTDS.dit).
+      Con esas credenciales el atacante puede suplantar usuarios y moverse por la red.
+    conditions:
+      source: log
+      payload.command:
+        - 're:\breg(\.exe)?\s+save\s+hklm\\(sam|system|security)\b'
+        - 're:\bprocdump(64)?(\.exe)?\b.*\blsass'
+        - 're:\bcomsvcs(\.dll)?\b.*\bminidump\b'
+        - 're:\bntdsutil(\.exe)?\b.*\bifm\b'
+        - 're:\bvssadmin(\.exe)?\b.*\bcreate\s+shadow\b'
+
+  - name: desactivacion_de_defensas
+    criticality: HIGH
+    mitre: [T1562.001, T1562.002, T1562.004]
+    descripcion: >-
+      Desactivación o debilitamiento de las defensas: antivirus (Defender y sus exclusiones), cortafuegos o auditoría.
+      Suele preceder a la ejecución de herramientas que de otro modo serían detectadas.
+    conditions:
+      source: log
+      payload.command:
+        - "add-mppreference"
+        - "auditpol /clear"
+        - 're:\bset-mppreference\b.*\s-disable'
+        - 're:\bnetsh(\.exe)?\b.*\badvfirewall\b.*\bstate\s+off\b'
+        - 're:\bnetsh(\.exe)?\b.*\bfirewall\b.*\bopmode\s+disable\b'
+        - 're:\bsc(\.exe)?\s+(stop|config)\s+windefend\b'
+        - 're:\bwevtutil(\.exe)?\s+sl\b.*/e:false\b'
+
+  # Descarga de binarios usando utilidades legítimas del sistema
+  # (living off the land).
+  - name: descarga_con_binario_legitimo
+    criticality: CRITICAL
+    mitre: [T1105, T1197]
+    descripcion: >-
+      Descarga de un fichero usando una utilidad propia del sistema (certutil, bitsadmin, Invoke-WebRequest, curl, wget).
+      Técnica de living off the land: el tráfico y el proceso parecen legítimos porque el binario es de confianza.
+    conditions:
+      source: log
+      payload.command:
+        - "bitsadmin /transfer"
+        - "start-bitstransfer"
+        - "downloadfile"
+        - "wget http"
+        - 're:\bcertutil(\.exe)?\b.*-urlcache\b'
+        - 're:\b(curl|wget)(\.exe)?\b.*\s-o\s'
+        - 're:\b(invoke-webrequest|iwr)\b.*\s-outfile\b'
+
+  - name: cuenta_o_grupo_modificado
+    criticality: HIGH
+    mitre: [T1136.001, T1098]
+    descripcion: >-
+      Creación, borrado o modificación de cuentas y grupos locales o de dominio (incluido cambiar una contraseña).
+      Es la vía habitual para crear una puerta trasera con la que volver a entrar más adelante.
+    conditions:
+      source: log
+      payload.command:
+        - "new-localuser"
+        - "add-localgroupmember"
+        - 're:\bnet1?(\.exe)?\s+(user|localgroup|group)\b.*\s/(add|del|delete|active)\b'
+        - 're:\bnet1?(\.exe)?\s+user\s+[^/\s]+\s+[^/\s]+'
+        - 're:\bdsadd(\.exe)?\s+user\b'
+        # equivalentes en Linux
+        - "chpasswd"
+        - 're:\b(useradd|adduser|userdel|deluser|groupadd)\b'
+        - 're:\busermod\b'
+
+  # Persistencia: que el código del atacante vuelva a ejecutarse tras
+  # reiniciar o al iniciar sesión.
+  - name: persistencia_registro_o_tarea
+    criticality: HIGH
+    mitre: [T1547.001, T1053.005, T1543.003]
+    descripcion: >-
+      Creación de un mecanismo para volver a ejecutarse tras reiniciar o al iniciar sesión: clave Run del registro,
+      tarea programada o servicio nuevo.
+      Garantiza que el acceso sobreviva a un reinicio.
+    conditions:
+      source: log
+      payload.command:
+        - 'currentversion\run'
+        - "schtasks /create"
+        - "new-service"
+        - "register-scheduledtask"
+        - 're:\bsc(\.exe)?\s+create\b'
+        # equivalentes en Linux: cron y servicios de systemd
+        - "/etc/cron"
+        - "systemctl enable"
+        - 're:\bcrontab\s+-[a-z]*e\b'
+        - 're:\bupdate-rc\.d\b'
+
+  # Copia de datos hacia fuera del equipo.
+  - name: exfiltracion_de_datos
+    criticality: CRITICAL
+    mitre: [T1048, T1567]
+    descripcion: >-
+      Copia de ficheros hacia un recurso de red, un servicio en la nube o un servidor remoto.
+      Es el objetivo final de muchas intrusiones y el momento en que se materializa la fuga de información.
+    conditions:
+      source: log
+      payload.command:
+        - "rclone "
+        - 're:\b(robocopy|xcopy|copy|copy-item|move|move-item)(\.exe)?\b.*\s\\\\[^\\\s]+\\'
+        - 're:\bcurl(\.exe)?\b.*\s(-f|-t|--upload-file|--data-binary)\s'
+        - 're:\binvoke-(restmethod|webrequest)\b.*-method\s+(post|put)\b.*-infile\b'
+        - 're:\b(scp|rsync)\b.*\s[a-z0-9._\-]+@[^\s:]+:'
+        - 're:\bsftp\b\s+[a-z0-9._\-]+@'
+
+  # Empaquetar antes de sacar: por sí solo no es exfiltración.
+  - name: preparacion_de_exfiltracion
+    criticality: HIGH
+    mitre: [T1560.001]
+    descripcion: >-
+      Compresión o empaquetado de ficheros (Compress-Archive, 7-Zip, RAR, makecab).
+      Por sí solo puede ser legítimo, pero es el paso previo habitual para sacar datos en un único fichero.
+    conditions:
+      source: log
+      payload.command:
+        - "compress-archive"
+        - "makecab"
+        - 're:\b7za?(\.exe)?\s+a\s'
+        - 're:\brar(\.exe)?\s+a\s'
+
+  # Va delante de movimiento_lateral (las dos son ALTA y `ssh -R 4444:… host`
+  # casa con ambas): a igualdad gana la primera del fichero, y el hallazgo que
+  # hay que leer primero es el túnel. El resto de reglas de red están abajo.
+  - name: tunel_o_redireccion_de_puertos
+    criticality: HIGH
+    mitre: [T1572, T1090, T1105]
+    descripcion: >-
+      Creación de un túnel o una redirección de puertos hacia el exterior (netsh portproxy, ssh -R/-L/-D,
+      ngrok, chisel, socat).
+      Abre un camino hacia la red interna que sobrevive a la sesión actual, y el cortafuegos solo ve una
+      conexión de salida normal.
+    conditions:
+      source: log
+      payload.command:
+        - "ngrok"
+        - "chisel"
+        - "proxychains"
+        - "dnscat"
+        - 're:\bfrpc?\b\s+-c\b'
+        - 're:\bnetsh(\.exe)?\b.*\bportproxy\b'
+        - 're:\bssh(\.exe)?\b.*\s-[a-z]*[lrd]\s*\d+:'
+        - 're:\bssh(\.exe)?\b.*\s-d\s*\d{2,5}\b'
+        - 're:\bplink(\.exe)?\b.*\s-[lr]\s*\d+:'
+        - 're:\bsocat\b.*\b(tcp|openssl)\d?-(listen|l):'
+
+  - name: movimiento_lateral
+    criticality: HIGH
+    mitre: [T1021.001, T1021.004, T1021.006, T1047]
+    descripcion: >-
+      Ejecución de órdenes o sesiones en otro equipo (WMI, WinRM, PowerShell Remoting, escritorio remoto).
+      Indica que el atacante está saltando desde este equipo a otros de la red.
+    conditions:
+      source: log
+      payload.command:
+        - "enter-pssession"
+        - 're:\bwmic(\.exe)?\b.*\s/node:'
+        - 're:\bwinrs(\.exe)?\b.*\s-r:'
+        - 're:\binvoke-command\b.*-computername\b'
+        - 're:\bmstsc(\.exe)?\b.*\s/v:'
+        - 're:\bssh(\.exe)?\b.*\s[a-z0-9._\-]+@[a-z0-9._\-]+'
+        - 're:\b(xfreerdp|rdesktop)\b'
+
+  # --- Red y autenticación (CU-03) -------------------------------------------
+  # Un log post-incidente no trae solo comandos del intruso: al lado suelen
+  # venir líneas de sshd, del cortafuegos o del servidor web. Sin estas reglas
+  # todo eso quedaba en BAJA y el analista tenía que leerlo a ojo.
+
+  - name: shell_inverso
+    criticality: CRITICAL
+    mitre: [T1059.004, T1071.001, T1219]
+    descripcion: >-
+      Apertura de una shell inversa: el equipo comprometido se conecta hacia el atacante y le entrega un
+      intérprete de comandos (netcat con -e, /dev/tcp, one-liner de Python, msfvenom).
+      Es acceso interactivo en directo, y atraviesa el cortafuegos porque la conexión sale desde dentro.
+    conditions:
+      source: log
+      payload.command:
+        - "msfvenom"
+        - "meterpreter"
+        - 're:/dev/tcp/\d'
+        - 're:\b(nc|ncat|netcat)(\.exe)?\b.*\s-[a-z]*e\s+\S*(sh|bash|cmd|powershell)'
+        - 're:\b(bash|sh)\b\s+-i\b.*>&'
+        - 're:\bpython[23]?(\.exe)?\b.*\bsocket\b.*\b(pty|subprocess)\b'
+
+  - name: escaneo_de_red_o_servicios
+    criticality: HIGH
+    mitre: [T1046, T1595.002]
+    descripcion: >-
+      Escaneo de puertos, de servicios o de una aplicación web (nmap, masscan, sqlmap, nikto, gobuster).
+      Puede venir como comando ejecutado desde el equipo comprometido o como el agente de usuario que el
+      escáner dejó grabado en el log del servidor web.
+    conditions:
+      source: log
+      payload.command:
+        # con límite de palabra: "sqlmapper" o "nmapped" no son el escáner
+        - 're:\b(nmap|masscan|sqlmap|nikto|gobuster|dirbuster|dirb|ffuf|wpscan)\b'
+        - 're:\btest-netconnection\b.*\s-(port|commontcpport)\b'
+
+  - name: herramienta_de_fuerza_bruta
+    criticality: HIGH
+    mitre: [T1110, T1110.001, T1110.003]
+    descripcion: >-
+      Herramienta de fuerza bruta o de rociado de contraseñas contra un servicio (SSH, RDP, SMB, web), o de
+      descifrado de hashes.
+      A diferencia de un fallo de autenticación suelto, aquí el intento masivo es deliberado.
+    conditions:
+      source: log
+      payload.command:
+        - "crackmapexec"
+        - "kerbrute"
+        - "patator"
+        - "hashcat"
+        - 're:\bhydra\b'
+        - 're:\b(medusa|ncrack|netexec|nxc)\b'
+        - 're:\bjohn\b.*\s--(wordlist|format)='
+
+  - name: regla_de_cortafuegos_modificada
+    criticality: HIGH
+    mitre: [T1562.004]
+    descripcion: >-
+      Alta, borrado o vaciado de reglas del cortafuegos para dejar pasar tráfico (netsh advfirewall firewall
+      add rule, New-NetFirewallRule, iptables, ufw, firewall-cmd).
+      Suele ser el paso previo a abrir el escritorio remoto o el puerto por el que entrará el atacante.
+    conditions:
+      source: log
+      payload.command:
+        - "new-netfirewallrule"
+        - "netsh advfirewall firewall add rule"
+        - "netsh firewall add"
+        - 're:\bufw\s+(allow|disable)\b'
+        - 're:\bfirewall-cmd\b.*--add-(port|service)\b'
+        - 're:\biptables\b.*\s-[aid]\s+(input|output|forward)\b'
+        - 're:\biptables\s+-f\b'
+
+  - name: acceso_persistente_ssh_o_sudo
+    criticality: HIGH
+    mitre: [T1098.004, T1548.003]
+    descripcion: >-
+      Manipulación de las claves SSH autorizadas o de los permisos de sudo (authorized_keys, sudoers,
+      usermod -aG sudo).
+      Es la forma habitual de conservar acceso con privilegios en Linux sin necesitar la contraseña.
+    conditions:
+      source: log
+      payload.command:
+        - "authorized_keys"
+        - "/etc/sudoers"
+        - "sudoers.d"
+        - "visudo"
+        - 're:\bssh-keygen\b'
+        - 're:\busermod\b.*\s-a?g\s+\S*(sudo|wheel|admin|root)\b'
+
+  - name: reconocimiento_de_red
+    criticality: MEDIUM
+    mitre: [T1049, T1016, T1018, T1135]
+    descripcion: >-
+      Consulta de las conexiones abiertas, la configuración de red, la tabla ARP o los equipos y recursos
+      visibles (netstat, ipconfig /all, arp -a, route print, net view, nslookup).
+      Fase de reconocimiento: el atacante dibuja la red interna para decidir a qué equipo salta.
+    conditions:
+      source: log
+      payload.command:
+        - "ipconfig /all"
+        - "route print"
+        - "get-nettcpconnection"
+        - "get-netipconfiguration"
+        - 're:\bnetstat(\.exe)?\b'
+        - 're:\barp(\.exe)?\s+-a\b'
+        - 're:\bnbtstat(\.exe)?\s+-'
+        - 're:\bnet1?(\.exe)?\s+(view|share)\b'
+        - 're:\b(nslookup|dig)\b'
+        - 're:\bss\s+-[antulpe]{2,}\b'
+        - 're:\bip\s+(a|addr|route|neigh)\b'
+        - 're:\bifconfig\b'
+
+  - name: acceso_a_recurso_compartido
+    criticality: MEDIUM
+    mitre: [T1021.002, T1135]
+    descripcion: >-
+      Conexión o montaje de un recurso compartido de red (net use, New-PSDrive, mount -t cifs, smbclient).
+      Es el paso previo a copiar herramientas al equipo destino o a sacar ficheros de él.
+    conditions:
+      source: log
+      payload.command:
+        - "new-psdrive"
+        - "smbclient"
+        - 're:\bnet1?(\.exe)?\s+use\b'
+        - 're:\bmount\b.*\s-t\s+(cifs|smbfs|nfs)\b'
+
+  - name: autenticacion_fallida
+    criticality: MEDIUM
+    mitre: [T1110]
+    descripcion: >-
+      Intento de inicio de sesión fallido (SSH, consola, escritorio remoto, suceso 4625 de Windows).
+      Aislado puede ser un error del propio usuario; repetido en pocos segundos es fuerza bruta, y ver dónde
+      termina la racha señala el momento del acceso real.
+    conditions:
+      source: log
+      payload.command:
+        - "authentication failure"
+        - "an account failed to log on"
+        - "error de inicio de sesión"
+        - "login failed for user"
+        - 're:\bfailed\s+(password|publickey|none|keyboard-interactive)\s+for\b'
+        - 're:\binvalid\s+user\b'
+        - 're:\bmaximum\s+authentication\s+attempts\s+exceeded\b'
+        - 're:\bevent\s*id\s*[:=]?\s*4625\b'
+
+  - name: inicio_de_sesion_remoto
+    criticality: MEDIUM
+    mitre: [T1078, T1021.004]
+    descripcion: >-
+      Inicio de sesión aceptado desde otro equipo (SSH, escritorio remoto, suceso 4624 de Windows).
+      Contrastado con la IP de origen y con los intentos fallidos previos, es lo que fija la hora exacta del
+      compromiso.
+    conditions:
+      source: log
+      payload.command:
+        - "successful network logon"
+        - 're:\baccepted\s+(password|publickey|keyboard-interactive)\s+for\b'
+        - 're:\bsshd\b.*\bsession\s+opened\s+for\s+user\b'
+        - 're:\bevent\s*id\s*[:=]?\s*4624\b'
+
+  - name: enumeracion_de_privilegios
+    criticality: MEDIUM
+    mitre: [T1033, T1087.001, T1082, T1482]
+    descripcion: >-
+      Consulta de los privilegios, cuentas, grupos o configuración del equipo y del dominio.
+      Fase de reconocimiento: el atacante mide hasta dónde puede llegar antes de actuar.
+    conditions:
+      source: log
+      payload.command:
+        - "whoami /priv"
+        - "whoami /all"
+        - "whoami /groups"
+        - "net accounts"
+        - "systeminfo"
+        # consultar cuentas o grupos; no si los modifica (/add...) ni si fija
+        # una contraseña (net user nombre clave), que es la regla de cuentas
+        - 're:\bnet1?(\.exe)?\s+(user(?!\s+[^/\s]+\s+[^/\s]+)|localgroup|group)\b(?!.*\s/(add|del|delete|active)\b)'
+        - 're:\bnltest(\.exe)?\b.*/(dclist|domain_trusts)'
+        - 're:\bquery\s+user\b'
+        - 're:\bget-local(user|groupmember)\b'
+
+default_criticality: LOW

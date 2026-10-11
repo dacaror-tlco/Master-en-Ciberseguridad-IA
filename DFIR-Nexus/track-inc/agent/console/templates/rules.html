@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Reglas{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reglas de clasificación</h1>
+</div>
+
+{% if error %}
+<div class="flash flash-error">No se pudieron cargar las reglas desde <code>{{ rules_path }}</code>: {{ error }}</div>
+{% else %}
+<p class="hint">Cargadas desde <code>{{ rules_path }}</code>. Se evalúan en orden; gana la primera que coincide.</p>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Criticidad</th>
+            <th>Condiciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rule in engine.rules %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ rule.name }}</strong></td>
+            <td><span class="badge badge-{{ rule.criticality.value|lower }}">{{ rule.criticality.value }}</span></td>
+            <td>
+                <ul class="conditions-list">
+                {% for field, value in rule.conditions.items() %}
+                    <li><code>{{ field }}</code> = {{ value }}</li>
+                {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td colspan="2" class="text-muted">Cualquier otro evento</td>
+            <td><span class="badge badge-{{ engine.default.value|lower }}">{{ engine.default.value }}</span></td>
+            <td class="text-muted">(criticidad por defecto)</td>
+        </tr>
+    </tbody>
+</table>
+
+<p class="hint">
+    Para cambiar el comportamiento del clasificador, edita el fichero YAML directamente
+    y reinicia el agente — no requiere tocar código Python.
+</p>
+{% endif %}
+{% endblock %}

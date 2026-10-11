@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+scamshield.db
+scamshield_local.db
+.env
+.pytest_cache/
+.coverage
+htmlcov/

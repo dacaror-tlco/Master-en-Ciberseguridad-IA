@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Configuración</h1>
+</div>
+<p class="hint">Vista de solo lectura. Para cambiar cualquier valor, edita el YAML de configuración y reinicia el agente.</p>
+
+<div class="panel">
+    <h2>General</h2>
+    <table class="simple-table">
+        <tr><td>agent_id</td><td class="text-right"><code>{{ config.agent_id }}</code></td></tr>
+        <tr><td>db_path</td><td class="text-right"><code>{{ config.db_path }}</code></td></tr>
+        <tr><td>rules_path</td><td class="text-right"><code>{{ config.rules_path }}</code></td></tr>
+    </table>
+</div>
+
+<div class="panel-grid">
+    <div class="panel">
+        <h2>Collectors</h2>
+        <table class="simple-table">
+            <tr><td>Filesystem</td><td class="text-right">{{ "✔ activo" if config.collectors.filesystem_enabled else "✘ desactivado" }}</td></tr>
+            <tr><td>Rutas monitorizadas</td><td class="text-right">{{ config.collectors.watch_paths | join(", ") }}</td></tr>
+            <tr><td>Procesos</td><td class="text-right">{{ "✔ activo" if config.collectors.process_enabled else "✘ desactivado" }}</td></tr>
+            <tr><td>Intervalo de polling (procesos)</td><td class="text-right">{{ config.collectors.process_poll_interval }}s</td></tr>
+            <tr><td>Red</td><td class="text-right">{{ "✔ activo" if config.collectors.network_enabled else "✘ desactivado" }}</td></tr>
+            <tr><td>Intervalo de polling (red)</td><td class="text-right">{{ config.collectors.network_poll_interval }}s</td></tr>
+            <tr><td>IPs en lista negra</td><td class="text-right">{{ config.collectors.ip_blacklist | length }}</td></tr>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Sincronización</h2>
+        <table class="simple-table">
+            <tr><td>Servidor central</td><td class="text-right">{{ config.sync.server_url or "no configurado (mock)" }}</td></tr>
+            <tr><td>API key</td><td class="text-right">{{ config.sync.api_key or "—" }}</td></tr>
+            <tr><td>Intervalo de sync</td><td class="text-right">{{ config.sync.interval_seconds }}s</td></tr>
+            <tr><td>Tamaño de lote</td><td class="text-right">{{ config.sync.batch_size }}</td></tr>
+            <tr><td>Reintentos máximos</td><td class="text-right">{{ config.sync.max_retries }}</td></tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

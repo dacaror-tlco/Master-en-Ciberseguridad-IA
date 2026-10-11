@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Daemon launchd para macOS.
+
+Instalación (con permisos de administrador):
+    sudo cp com.empresa.evidence-agent.plist /Library/LaunchDaemons/
+    sudo chown root:wheel /Library/LaunchDaemons/com.empresa.evidence-agent.plist
+    sudo launchctl load /Library/LaunchDaemons/com.empresa.evidence-agent.plist
+
+Para desinstalar:
+    sudo launchctl unload /Library/LaunchDaemons/com.empresa.evidence-agent.plist
+    sudo rm /Library/LaunchDaemons/com.empresa.evidence-agent.plist
+
+Ajustar las rutas de /opt/evidence-agent según dónde se despliegue.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.empresa.evidence-agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/evidence-agent/venv/bin/python</string>
+        <string>-m</string>
+        <string>agent.main</string>
+        <string>--config</string>
+        <string>/opt/evidence-agent/config/agent.yaml</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/opt/evidence-agent</string>
+
+    <!-- Arranque automático al iniciar el sistema, y reinicio si el proceso muere -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- launchd manda SIGTERM por defecto al descargar el daemon, que es
+         justo lo que agent/main.py sabe manejar para el apagado ordenado -->
+    <key>ExitTimeOut</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/evidence-agent/stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/var/log/evidence-agent/stderr.log</string>
+
+    <!-- Debe correr como root para poder monitorizar rutas y procesos de
+         todos los usuarios -->
+    <key>UserName</key>
+    <string>root</string>
+</dict>
+</plist>

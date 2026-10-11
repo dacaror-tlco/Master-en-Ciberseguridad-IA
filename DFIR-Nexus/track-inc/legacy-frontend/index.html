@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus — Tracking Post-Incidente</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <div class="brand">
+                <span class="brand-icon">🛡</span>
+                <div>
+                    <div class="brand-title">Nexus</div>
+                    <div class="brand-subtitle">Módulo 3 · Tracking</div>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" data-tab="analizar" class="tab-link active">📄 Analizar log</a></li>
+                <li><a href="#" data-tab="eventos" class="tab-link">🗂 Eventos guardados</a></li>
+                <li><a href="#" data-tab="casos" class="tab-link">🗃 Casos (temporal)</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <span id="api-status" class="api-status">● comprobando API...</span>
+            </div>
+        </nav>
+
+        <main class="content">
+            <div id="flash-container"></div>
+
+            <!-- TAB: Analizar log -->
+            <section id="tab-analizar" class="tab-panel active">
+                <div class="page-header">
+                    <h1>Analizar log</h1>
+                </div>
+
+                <div class="panel">
+                    <h2>1. Selecciona el caso</h2>
+                    <div class="filter-bar">
+                        <select id="select-case"></select>
+                        <button class="btn btn-secondary" id="btn-refresh-cases">🔄 Refrescar</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>2. Sube el fichero de log</h2>
+                    <div class="filter-bar">
+                        <input type="file" id="input-log-file" accept=".log,.txt">
+                        <button class="btn btn-primary" id="btn-analyze">🔍 Analizar (sin guardar)</button>
+                    </div>
+                    <p class="hint">El análisis es una vista previa: no se guarda nada hasta que pulses "Guardar en tracking_events".</p>
+                </div>
+
+                <div class="panel" id="preview-panel" style="display:none;">
+                    <h2>3. Revisa el resultado</h2>
+                    <div class="stat-cards" id="preview-stats"></div>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Hora</th><th>Evento</th><th>Severidad</th><th>Usuario</th><th>Regla</th></tr>
+                        </thead>
+                        <tbody id="preview-tbody"></tbody>
+                    </table>
+                    <div class="action-row" style="margin-top:16px;">
+                        <button class="btn btn-primary" id="btn-save-events">💾 Guardar en tracking_events</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: Eventos guardados -->
+            <section id="tab-eventos" class="tab-panel">
+                <div class="page-header">
+                    <h1>Eventos guardados</h1>
+                </div>
+                <div class="panel">
+                    <div class="filter-bar">
+                        <select id="select-case-events"></select>
+                        <button class="btn btn-secondary" id="btn-load-events">Cargar eventos</button>
+                        <button class="btn btn-secondary" id="btn-verify">🔍 Verificar integridad</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>ID</th><th>Hora</th><th>Evento</th><th>Severidad</th><th>Fuente</th><th>Usuario</th></tr>
+                    </thead>
+                    <tbody id="events-tbody"></tbody>
+                </table>
+            </section>
+
+            <!-- TAB: Casos (placeholder) -->
+            <section id="tab-casos" class="tab-panel">
+                <div class="page-header">
+                    <h1>Casos (temporal)</h1>
+                </div>
+                <p class="hint">
+                    Esta pestaña es un placeholder mientras el Módulo 1 (Gestión de Casos) no está mergeado.
+                    Permite crear casos mínimos para poder probar Tracking de forma aislada.
+                </p>
+                <div class="panel">
+                    <div class="filter-bar">
+                        <input type="text" id="input-case-name" placeholder="Nombre del caso">
+                        <button class="btn btn-primary" id="btn-create-case">+ Crear caso</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>ID</th><th>Nombre</th><th>Estado</th></tr></thead>
+                    <tbody id="cases-tbody"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

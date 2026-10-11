@@ -1,0 +1,98 @@
+{
+  "_nota": "Fixture escrita con el formato propuesto por el Módulo 3 (agosto 2026): identificadores de texto (evt-…, tl-…, obs-…) y severidad con tilde. Existe para comprobar que el Módulo 5 lo digiere tal cual, sin pedirle a nadie que cambie su formato. Ver app/modules/shared/models.py (IdAjeno, EnumTolerante). Llevaba además un objeto `detalles` por evento, retirado el 2026-09-02 al comprobar que la tabla `tracking_events` real de la rama `track-inc` no tiene esa columna.",
+  "case": {
+    "nombre": "Intrusión por servicio bindshell expuesto",
+    "estado": "en_progreso",
+    "fecha_creacion": "2026-08-20T09:00:00Z",
+    "descripcion": "Durante una auditoría de la red interna se detecta un host con un servicio de shell escuchando sin autenticación. Se investiga el alcance del acceso obtenido y qué se ejecutó desde él.",
+    "responsable": "Ana Pérez"
+  },
+  "evidences": [
+    {
+      "tipo": "captura_trafico",
+      "valor": "EV-001 — captura pcap del segmento durante la ventana del incidente",
+      "fecha_subida": "2026-08-20T18:00:00Z",
+      "observaciones": "Capturada en el puerto espejo del conmutador"
+    },
+    {
+      "tipo": "log",
+      "valor": "EV-002 — salida completa del escaneo de puertos del host afectado",
+      "fecha_subida": "2026-08-20T18:05:00Z",
+      "observaciones": null
+    }
+  ],
+  "osint_results": [
+    {
+      "tipo_indicador": "ip",
+      "valor": "10.0.2.15",
+      "reputacion": "limpia",
+      "pais": null,
+      "detecciones": 0,
+      "fuente": "Consulta interna",
+      "fecha_consulta": "2026-08-20T19:00:00Z",
+      "raw_response": {
+        "nota": "direccionamiento privado, sin reputacion externa"
+      }
+    }
+  ],
+  "tracking_events": [
+    {
+      "id": "evt-1a4d9b30",
+      "hora": "2026-08-20T16:18:02Z",
+      "evento": "Escaneo de puertos con nmap contra el host: 1524/tcp abierto, servicio bindshell",
+      "severidad": "media",
+      "fuente_log": "nmap",
+      "usuario_detectado": null
+    },
+    {
+      "id": "evt-7f3a9c2e",
+      "hora": "2026-08-20T16:20:15Z",
+      "evento": "Shell de root detectada en bindshell",
+      "severidad": "crítica",
+      "fuente_log": "nc",
+      "usuario_detectado": "root"
+    },
+    {
+      "id": "evt-c81e5f77",
+      "hora": "2026-08-20T16:24:41Z",
+      "evento": "Petición HTTP con recorrido de directorios hacia /etc/passwd",
+      "severidad": "alta",
+      "fuente_log": "access.log",
+      "usuario_detectado": "www-data"
+    }
+  ],
+  "timeline_events": [
+    {
+      "id": "tl-1",
+      "fecha_hora": "2026-08-20T16:18:02Z",
+      "descripcion": "Escaneo de puertos que identifica el servicio bindshell escuchando en el puerto 1524.",
+      "origen_modulo": "tracking",
+      "origen_id": "evt-1a4d9b30",
+      "orden": 1
+    },
+    {
+      "id": "tl-2",
+      "fecha_hora": "2026-08-20T16:20:15Z",
+      "descripcion": "Conexión al puerto 1524 que devuelve una shell con privilegios de root, sin solicitar credenciales.",
+      "origen_modulo": "tracking",
+      "origen_id": "evt-7f3a9c2e",
+      "orden": 2
+    },
+    {
+      "id": "tl-3",
+      "fecha_hora": "2026-08-20T16:24:41Z",
+      "descripcion": "Petición HTTP con recorrido de directorios que obtiene el contenido de /etc/passwd.",
+      "origen_modulo": "tracking",
+      "origen_id": "evt-c81e5f77",
+      "orden": 3
+    },
+    {
+      "id": "tl-4",
+      "fecha_hora": "2026-08-20T18:00:00Z",
+      "descripcion": "Incorporación de la captura de tráfico del segmento durante la ventana del incidente.",
+      "origen_modulo": "evidences",
+      "origen_id": "1",
+      "orden": 4
+    }
+  ]
+}

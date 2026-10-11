@@ -1,0 +1,4 @@
+Sep 29 10:15:32 lab-host sshd[1234]: Failed password for invalid user admin from 203.0.113.7 port 51515 ssh2
+Sep 29 10:15:34 lab-host sshd[1234]: Failed password for invalid user admin from 203.0.113.7 port 51516 ssh2
+Sep 29 10:16:01 lab-host sshd[1234]: Accepted password for labuser from 198.51.100.20 port 51520 ssh2
+Sep 29 10:16:05 lab-host sudo:    labuser : TTY=pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/whoami

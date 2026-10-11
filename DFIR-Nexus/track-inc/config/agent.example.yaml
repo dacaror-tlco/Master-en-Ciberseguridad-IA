@@ -1,0 +1,26 @@
+# Configuración de ejemplo del agente. Copiar como agent.yaml y ajustar.
+
+agent_id: "agent-001"
+db_path: "/var/lib/evidence-agent/evidence.db"   # en Windows: p.ej. C:\ProgramData\evidence-agent\evidence.db
+rules_path: "agent/classifier/rules.yaml"
+
+collectors:
+  filesystem_enabled: true
+  watch_paths:
+    - "/etc"
+    - "/var/log"
+    - "/home"
+
+  process_enabled: true
+  process_poll_interval: 1.0
+
+  network_enabled: true
+  network_poll_interval: 2.0
+  ip_blacklist: []   # se puede alimentar desde el Módulo 2 (OSINT/fraude)
+
+sync:
+  server_url: null    # null mientras no exista la API central -> se usa transporte mock
+  api_key: null
+  interval_seconds: 5.0
+  batch_size: 50
+  max_retries: 5

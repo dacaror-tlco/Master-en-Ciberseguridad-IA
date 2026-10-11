@@ -1,0 +1,31 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+
+# El entregable se regenera desde el propio codigo (ver README): un zip de
+# 1,2 MB dentro del repositorio solo duplica lo que ya esta al lado.
+*.zip
+
+# frontend
+node_modules/
+dist/
+*.tsbuildinfo
+*.log
+
+# EXCEPCIONES: este modulo analiza ficheros de log, asi que las muestras y
+# fixtures de prueba SI se versionan aunque terminen en .log.
+!examples/**/*.log
+!tests/**/*.log
+!**/fixtures/**/*.log
+!**/samples/**/*.log
+
+# estado en tiempo de ejecucion de la cadena de hashes
+.tracking_chain/
+
+# ajustes locales de Claude Code (launch.json si se versiona)
+.claude/settings.local.json

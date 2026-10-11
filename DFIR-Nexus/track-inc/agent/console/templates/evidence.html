@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Evidencias{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Evidencias</h1>
+    <span class="agent-id-badge">{{ total_filtered }} resultado(s)</span>
+</div>
+
+<form method="get" class="filter-bar">
+    <select name="criticality">
+        <option value="">Todas las criticidades</option>
+        {% for c in criticalities %}
+        <option value="{{ c }}" {{ 'selected' if criticality_filter == c }}>{{ c }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="source">
+        <option value="">Todos los orígenes</option>
+        {% for s in sources %}
+        <option value="{{ s }}" {{ 'selected' if source_filter == s }}>{{ s }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-secondary">Filtrar</button>
+    {% if criticality_filter or source_filter %}
+    <a href="{{ url_for('evidence_list') }}" class="btn-link">Limpiar filtros</a>
+    {% endif %}
+</form>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Seq</th>
+            <th>Origen</th>
+            <th>Tipo</th>
+            <th>Criticidad</th>
+            <th>Regla</th>
+            <th>Ruta / Detalle</th>
+            <th>Sync</th>
+            <th>Hash</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in records %}
+        <tr>
+            <td>{{ r.seq }}</td>
+            <td>{{ r.event.source.value }}</td>
+            <td>{{ r.event.event_type }}</td>
+            <td><span class="badge badge-{{ r.criticality.value|lower }}">{{ r.criticality.value }}</span></td>
+            <td class="text-muted">{{ r.matched_rule or "—" }}</td>
+            <td class="truncate" title="{{ r.event.payload }}">
+                {{ r.event.payload.get('path') or r.event.payload.get('remote_ip') or r.event.payload.get('name') or '—' }}
+            </td>
+            <td><span class="sync-status sync-{{ r.sync_status }}">{{ r.sync_status }}</span></td>
+            <td><code class="hash-cell">{{ r.hash[:10] }}...</code></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-muted">No hay evidencias que coincidan con el filtro.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    {% if has_prev %}
+    <a href="{{ url_for('evidence_list', page=page-1, criticality=criticality_filter, source=source_filter) }}" class="btn-link">← Anterior</a>
+    {% endif %}
+    <span class="text-muted">Página {{ page }}</span>
+    {% if has_next %}
+    <a href="{{ url_for('evidence_list', page=page+1, criticality=criticality_filter, source=source_filter) }}" class="btn-link">Siguiente →</a>
+    {% endif %}
+</div>
+{% endblock %}

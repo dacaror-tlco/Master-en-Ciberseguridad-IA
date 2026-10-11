@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./effects.css";
+
+/* Borde por defecto del sistema: hairline en vez del gris por defecto de Tailwind */
+* {
+  border-color: var(--color-hairline);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  font-size: var(--text-body-md);
+  line-height: var(--text-body-md--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-headline);
+}

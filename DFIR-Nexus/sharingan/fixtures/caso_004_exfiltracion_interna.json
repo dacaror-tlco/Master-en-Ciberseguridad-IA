@@ -1,0 +1,152 @@
+{
+  "case": {
+    "nombre": "Exfiltración de información por empleado saliente",
+    "estado": "cerrado",
+    "fecha_creacion": "2026-07-15T07:00:00Z",
+    "descripcion": "Tras la baja voluntaria de un comercial, la dirección de Nordia Consulting detecta que un competidor ha contactado a su cartera de clientes. Se investiga si hubo extracción de información durante el periodo de preaviso. El texto de este caso incluye a propósito caracteres <, > y & para verificar el escapado en los cuatro formatos.",
+    "responsable": "Ana Pérez"
+  },
+  "evidences": [
+    {
+      "tipo": "imagen_disco",
+      "valor": "EV-001 — imagen forense del portátil corporativo <NRD-LAP-114>, adquirida con write blocker",
+      "fecha_subida": "2026-07-16T08:30:00Z",
+      "observaciones": "Equipo entregado precintado por RR. HH. & dirección"
+    },
+    {
+      "tipo": "log",
+      "valor": "EV-002 — registros del servidor de ficheros, del 2026-06-01 al 2026-07-14",
+      "fecha_subida": "2026-07-16T09:10:00Z",
+      "observaciones": null
+    },
+    {
+      "tipo": "log",
+      "valor": "EV-003 — registros del proxy corporativo del mismo periodo",
+      "fecha_subida": "2026-07-16T09:12:00Z",
+      "observaciones": "Incluye tráfico HTTPS con inspección"
+    },
+    {
+      "tipo": "documento",
+      "valor": "EV-004 — contrato laboral con cláusula de confidencialidad firmada",
+      "fecha_subida": "2026-07-17T11:00:00Z",
+      "observaciones": "Aportado por el cliente"
+    }
+  ],
+  "osint_results": [
+    {
+      "tipo_indicador": "dominio",
+      "valor": "transfer-seguro.example",
+      "reputacion": "sospechosa",
+      "pais": "Islandia",
+      "detecciones": 2,
+      "fuente": "VirusTotal",
+      "fecha_consulta": "2026-07-18T10:00:00Z",
+      "raw_response": {"categorias": ["file sharing"], "nota": "servicio de intercambio de ficheros sin registro"}
+    },
+    {
+      "tipo_indicador": "ip",
+      "valor": "203.0.113.201",
+      "reputacion": "limpia",
+      "pais": "España",
+      "detecciones": 0,
+      "fuente": "AbuseIPDB",
+      "fecha_consulta": "2026-07-18T10:05:00Z",
+      "raw_response": {"abuseConfidenceScore": 0, "isp": "Operador residencial"}
+    }
+  ],
+  "tracking_events": [
+    {
+      "hora": "2026-06-28T18:40:00Z",
+      "evento": "Acceso masivo al recurso compartido \\\\NRD-FS01\\Comercial fuera del horario habitual (1.284 ficheros leídos en 22 minutos)",
+      "severidad": "alta",
+      "fuente_log": "fileserver_audit.evtx",
+      "usuario_detectado": "j.morales"
+    },
+    {
+      "hora": "2026-06-28T19:15:00Z",
+      "evento": "Conexión de dispositivo de almacenamiento masivo USB al portátil corporativo",
+      "severidad": "media",
+      "fuente_log": "system.evtx",
+      "usuario_detectado": "j.morales"
+    },
+    {
+      "hora": "2026-07-02T21:03:00Z",
+      "evento": "Subida de 412 MB a transfer-seguro.example desde la red corporativa",
+      "severidad": "critica",
+      "fuente_log": "proxy.log",
+      "usuario_detectado": "j.morales"
+    },
+    {
+      "hora": "2026-07-11T16:20:00Z",
+      "evento": "Borrado del historial del navegador y de la carpeta de descargas",
+      "severidad": "media",
+      "fuente_log": "system.evtx",
+      "usuario_detectado": "j.morales"
+    },
+    {
+      "hora": "2026-07-14T17:55:00Z",
+      "evento": "Último inicio de sesión del usuario antes de la entrega del equipo",
+      "severidad": "baja",
+      "fuente_log": "security.evtx",
+      "usuario_detectado": "j.morales"
+    }
+  ],
+  "timeline_events": [
+    {
+      "fecha_hora": "2026-06-15T09:00:00Z",
+      "descripcion": "El empleado comunica su baja voluntaria e inicia el periodo de preaviso de un mes.",
+      "origen_modulo": "evidences",
+      "origen_id": 4,
+      "orden": 1
+    },
+    {
+      "fecha_hora": "2026-06-28T18:40:00Z",
+      "descripcion": "Lectura de 1.284 ficheros del recurso compartido <Comercial> en 22 minutos, fuera del horario habitual del usuario.",
+      "origen_modulo": "tracking",
+      "origen_id": 1,
+      "orden": 2
+    },
+    {
+      "fecha_hora": "2026-06-28T19:15:00Z",
+      "descripcion": "Conexión de un dispositivo USB de almacenamiento masivo al portátil corporativo, 35 minutos después del acceso anterior.",
+      "origen_modulo": "tracking",
+      "origen_id": 2,
+      "orden": 3
+    },
+    {
+      "fecha_hora": "2026-07-02T21:03:00Z",
+      "descripcion": "Transferencia de 412 MB al servicio externo transfer-seguro.example desde la red corporativa.",
+      "origen_modulo": "tracking",
+      "origen_id": 3,
+      "orden": 4
+    },
+    {
+      "fecha_hora": "2026-07-02T21:30:00Z",
+      "descripcion": "El servicio de destino permite el intercambio de ficheros sin registro previo ni trazabilidad del receptor.",
+      "origen_modulo": "osint",
+      "origen_id": 1,
+      "orden": 5
+    },
+    {
+      "fecha_hora": "2026-07-11T16:20:00Z",
+      "descripcion": "Borrado del historial de navegación y de la carpeta de descargas del equipo corporativo.",
+      "origen_modulo": "tracking",
+      "origen_id": 4,
+      "orden": 6
+    },
+    {
+      "fecha_hora": "2026-07-14T17:55:00Z",
+      "descripcion": "Último inicio de sesión del usuario; el equipo se entrega precintado al día siguiente.",
+      "origen_modulo": "tracking",
+      "origen_id": 5,
+      "orden": 7
+    },
+    {
+      "fecha_hora": "2026-07-16T08:30:00Z",
+      "descripcion": "Adquisición forense del portátil corporativo con bloqueador de escritura.",
+      "origen_modulo": "evidences",
+      "origen_id": 1,
+      "orden": 8
+    }
+  ]
+}

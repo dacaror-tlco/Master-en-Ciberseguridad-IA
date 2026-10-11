@@ -1,0 +1,39 @@
+# Entornos virtuales
+
+.venv/
+venv/
+
+# Dependencias Node (raíz: workspaces del launcher de desarrollo)
+
+node_modules/
+
+# Variables de entorno
+
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Python
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest
+
+.pytest_cache/
+
+# IDEs
+
+.vscode/
+.idea/
+
+# Sistema operativo
+
+.DS_Store
+Thumbs.db
+
+#Directorios
+/design/

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Post-Incident Tracking - OGMA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Space+Grotesk:wght@500;600&amp;family=Geist:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#9fcede",
+                        "secondary-fixed-dim": "#90d6a1",
+                        "tertiary-container": "#7aa8b8",
+                        "inverse-primary": "#2c6a3c",
+                        "secondary": "#90d6a1",
+                        "on-secondary-fixed": "#00210d",
+                        "on-secondary-fixed-variant": "#03522a",
+                        "on-primary-fixed": "#00210a",
+                        "surface-tint": "#94d69d",
+                        "primary-fixed-dim": "#94d69d",
+                        "surface-container-low": "#141e19",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#baeafb",
+                        "secondary-container": "#08552c",
+                        "secondary-fixed": "#abf3bb",
+                        "inverse-surface": "#dae5dd",
+                        "primary": "#94d69d",
+                        "outline-variant": "#404940",
+                        "surface-variant": "#2d3732",
+                        "on-tertiary": "#003642",
+                        "on-error": "#690005",
+                        "surface-dim": "#0c1511",
+                        "on-surface": "#dae5dd",
+                        "surface-container-lowest": "#07100c",
+                        "surface-bright": "#313b36",
+                        "on-tertiary-fixed-variant": "#1b4d5b",
+                        "on-primary": "#003917",
+                        "background": "#0c1511",
+                        "primary-container": "#6faf7a",
+                        "primary-fixed": "#aff2b8",
+                        "on-primary-fixed-variant": "#0f5227",
+                        "outline": "#8a9389",
+                        "on-secondary-container": "#82c894",
+                        "surface-container": "#18221d",
+                        "on-tertiary-fixed": "#001f27",
+                        "on-background": "#dae5dd",
+                        "tertiary-fixed-dim": "#9fcede",
+                        "on-surface-variant": "#c0c9bd",
+                        "on-secondary": "#00391a",
+                        "surface-container-highest": "#2d3732",
+                        "inverse-on-surface": "#28332d",
+                        "on-tertiary-container": "#033d4b",
+                        "on-primary-container": "#00411b",
+                        "surface": "#0c1511",
+                        "surface-container-high": "#222c27"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "margin-safe": "32px",
+                        "panel-gap": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "mono-data": ["JetBrains Mono"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-lg-mobile": ["Space Grotesk"],
+                        "body-md": ["JetBrains Mono"],
+                        "label-caps": ["Geist"],
+                        "body-lg": ["JetBrains Mono"],
+                        "headline-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "mono-data": ["13px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "headline-lg": ["42px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["28px", { "lineHeight": "1.3", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>body {
+    background-image: url("data:image/svg+xml;utf8,<svg width=\"32\" height=\"32\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"1\" cy=\"1\" r=\"1\" fill=\"%231B2520\"/></svg>")
+    }
+/* Subtle noise overlay */
+.noise-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.02;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDVfh5bcOiLcWailnLoTVmUw75MxcrEzqQWMaWFVEuatg7TesKXrew_dbVHvT-jbxkIsB_Pl_r3wPu2ECJQz3QP74WJWHQzstN4KXVKkP7ATGrKKptQkFPcfuvggQuLKxsRDOCdzIJXVLsuraMZteX1N3wR_9nNF5oVlT_jGozJGmSwJZRns46MJk_XgR4xC72JwEgkDn-S2wEATmjHun1nVRj3N3OwycOyUXJWFPvpOgKskThFd5Fsxw)
+    }
+/* Custom Scrollbar for dense tables */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px
+    }
+::-webkit-scrollbar-track {
+    background: #0c1511
+    }
+::-webkit-scrollbar-thumb {
+    background: #2d3732;
+    border-radius: 4px
+    }</style>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen overflow-hidden flex flex-col antialiased">
+<div class="noise-overlay" data-alt="A seamless noise texture generated procedurally, resembling high ISO film grain, strictly black and white pixels, low opacity, adding tactile texture to a dark mode forensic UI interface. No discernible subjects, pure noise pattern."></div>
+<!-- TopAppBar -->
+<header class="bg-surface-container dark:bg-surface-container w-full h-16 border-b border-outline-variant flex justify-between items-center px-gutter shrink-0 z-20">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md text-primary tracking-tight">OGMA</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded hover:bg-surface-variant/50 transition-colors text-on-surface-variant cursor-pointer active:opacity-80 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded hover:bg-surface-variant/50 transition-colors text-on-surface-variant cursor-pointer active:opacity-80 transition-all">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 rounded hover:bg-surface-variant/50 transition-colors text-on-surface-variant cursor-pointer active:opacity-80 transition-all">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img class="w-8 h-8 rounded-full ml-4 border border-outline-variant object-cover" data-alt="Investigator Profile avatar, professional headshot in high contrast black and white lighting, mysterious atmosphere, suited figure slightly silhouetted against a dark background, fitting a sleek cyber-espionage or forensic analytics platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7t46MWt1LeWULIaxL2ZYyRwMlRVUK_dk6XXH-bzwynyaTAgZiTqZWYimj0Pgi3YxJu8O-ZJwlCdiaYZ7OHXtfeMq7RX_YZV7FDa4RqONv-tzgZ2tDeUZKpx1QqmMkpmol5vPi9wxzDVU9COI9k7IRSfUUqciuOIynb2YQNA-7fGmUIwQm5Qx3s3Qm82rdhJU84PQrD_AjMr9PvZnB5JjxCOmTDk33A2Xxt3IbIZOsjvFbGm4fSHCXag"/>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full border-r border-outline-variant bg-surface-container-low dark:bg-surface-container-low w-64 shrink-0 z-10">
+<div class="p-4 border-b border-outline-variant">
+<div class="flex items-center gap-3 mb-4">
+<img class="w-10 h-10 rounded" data-alt="Ogma Forensic Systems corporate logo, minimalist geometric shapes resembling an eye or stylized keyhole, glowing faintly in deep petrol blue against a pure black background, sharp corporate espionage aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpSaGgLyW4Om7UQlOi5IpJgSdQdNn5Y13OmY40nvaZpjylREZZgiQqow3SbR3wI20OVuEaznRGINjO8h_RI8xMltSUJOf8ErKDeh6-Tq3ikM-MgAC3f74rrVS6NhhFYgfPJqUUAwus2D4gUaHx9AAlzF1r_iJSwkAjjmBWyjDGed9136z--Alq7bYcsDxxdIfT44SicIMWP0d8kF3vpWJemzBWdQzMirfj33yo0Z2E4b8f0MVEJKH_rg"/>
+<div>
+<div class="font-headline-md text-headline-md text-primary text-sm">OGMA</div>
+<div class="font-mono-data text-mono-data text-on-surface-variant text-xs opacity-70">Forensic Analyst</div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-mono-data text-mono-data py-2 rounded font-bold uppercase tracking-wider hover:bg-primary-container transition-colors">
+                    New Case
+                </button>
+</div>
+<div class="flex-1 overflow-y-auto py-2">
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">dashboard</span>
+<span class="font-mono-data text-mono-data">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">folder_managed</span>
+<span class="font-mono-data text-mono-data">Cases</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">fingerprint</span>
+<span class="font-mono-data text-mono-data">Evidence</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">public</span>
+<span class="font-mono-data text-mono-data">OSINT</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-primary bg-secondary-container/20 border-l-2 border-primary hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">history_edu</span>
+<span class="font-mono-data text-mono-data">Post-Incident Tracking</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">timeline</span>
+<span class="font-mono-data text-mono-data">Timeline</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">description</span>
+<span class="font-mono-data text-mono-data">Reports</span>
+</a>
+<a class="flex items-center gap-3 py-3 px-4 transition-transform duration-150 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-200" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">settings</span>
+<span class="font-mono-data text-mono-data">Settings</span>
+</a>
+</div>
+<div class="border-t border-outline-variant p-2">
+<a class="flex items-center gap-3 py-2 px-4 text-on-surface-variant hover:text-on-surface" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">help</span>
+<span class="font-mono-data text-mono-data">Help</span>
+</a>
+<a class="flex items-center gap-3 py-2 px-4 text-on-surface-variant hover:text-on-surface" href="#">
+<span class="material-symbols-outlined font-mono-data text-mono-data">logout</span>
+<span class="font-mono-data text-mono-data">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full bg-surface-dim overflow-hidden relative">
+<!-- Atmospheric Mist Gradient -->
+<div class="absolute inset-0 bg-gradient-to-br from-tertiary/5 to-transparent pointer-events-none z-0"></div>
+<!-- Dashboard Header / Summary -->
+<div class="px-margin-safe py-6 shrink-0 z-10 border-b border-surface-container-high bg-surface-dim/80 backdrop-blur-sm">
+<h1 class="font-headline-md text-headline-md text-on-surface mb-6">Post-Incident Tracking</h1>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-panel-gap">
+<!-- Stat Card 1 -->
+<div class="border border-outline-variant bg-[#131A17] p-4 flex flex-col gap-2 relative overflow-hidden group">
+<div class="absolute inset-0 shadow-[inset_0_0_15px_rgba(255,255,255,0.02)] pointer-events-none"></div>
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Active Threats</span>
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-error">12</div>
+<div class="h-1 w-full bg-surface-container mt-2 rounded overflow-hidden">
+<div class="h-full bg-error w-1/4"></div>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="border border-outline-variant bg-[#131A17] p-4 flex flex-col gap-2 relative">
+<div class="absolute inset-0 shadow-[inset_0_0_15px_rgba(255,255,255,0.02)] pointer-events-none"></div>
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Hosts Compromised</span>
+<span class="material-symbols-outlined text-tertiary">computer</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-tertiary">47</div>
+<div class="font-mono-data text-mono-data text-tertiary/70 text-xs mt-1">+3 since last scan</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="border border-outline-variant bg-[#131A17] p-4 flex flex-col gap-2 relative">
+<div class="absolute inset-0 shadow-[inset_0_0_15px_rgba(255,255,255,0.02)] pointer-events-none"></div>
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Unusual Patterns</span>
+<span class="material-symbols-outlined text-primary">data_usage</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">89</div>
+<div class="flex gap-2 mt-1">
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-mono-data text-mono-data">DATA EXFIL</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-mono-data text-mono-data">LATERAL</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Workspace Area (Table + Detail Pane) -->
+<div class="flex-1 flex overflow-hidden z-10 relative">
+<!-- Main Log Table -->
+<div class="flex-1 flex flex-col p-margin-safe overflow-hidden border-r border-surface-container-high">
+<!-- Search & Filter Bar -->
+<div class="flex gap-3 mb-4 shrink-0">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">search</span>
+<input class="w-full bg-[#0B0F0D] border border-[#1B2520] text-on-surface font-mono-data text-mono-data py-2 pl-9 pr-4 rounded focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none placeholder-on-surface-variant/50 transition-shadow shadow-[0_0_0_rgba(148,214,157,0)] focus:shadow-[0_0_10px_rgba(148,214,157,0.2)]" placeholder="SPL&gt; source::wineventlog severity&gt;=high" type="text"/>
+</div>
+<button class="border border-tertiary text-tertiary hover:bg-tertiary/10 hover:shadow-[0_0_10px_rgba(159,206,222,0.3)] px-4 py-2 rounded font-label-caps text-label-caps transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filters
+                        </button>
+<button class="border border-tertiary text-tertiary hover:bg-tertiary/10 hover:shadow-[0_0_10px_rgba(159,206,222,0.3)] px-4 py-2 rounded font-label-caps text-label-caps transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">date_range</span> 24H
+                        </button>
+</div>
+<!-- Table Container -->
+<div class="flex-1 border border-[#1B2520] bg-[#131A17] rounded flex flex-col overflow-hidden relative">
+<div class="absolute inset-0 shadow-[inset_0_0_20px_rgba(255,255,255,0.01)] pointer-events-none"></div>
+<!-- Table Header -->
+<div class="bg-surface-container-high border-b border-[#1B2520] grid grid-cols-12 gap-2 p-3 font-label-caps text-label-caps text-on-surface-variant shrink-0">
+<div class="col-span-2">Timestamp</div>
+<div class="col-span-1">Sev</div>
+<div class="col-span-2">Source IP</div>
+<div class="col-span-2">Affected Host</div>
+<div class="col-span-2">User</div>
+<div class="col-span-3">Activity</div>
+</div>
+<!-- Table Body -->
+<div class="flex-1 overflow-y-auto font-mono-data text-mono-data text-xs">
+<!-- Row (Selected) -->
+<div class="grid grid-cols-12 gap-2 p-3 border-b border-[#1B2520] hover:bg-[#1B2520] bg-[#1B2520]/50 cursor-pointer relative group">
+<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary"></div>
+<div class="col-span-2 text-on-surface-variant">2023-10-27 14:32:01.045</div>
+<div class="col-span-1"><span class="bg-error-container text-error px-1.5 py-0.5 rounded text-[10px]">CRIT</span></div>
+<div class="col-span-2 text-tertiary">192.168.1.105</div>
+<div class="col-span-2 text-on-surface">SRV-AD-01</div>
+<div class="col-span-2 text-on-surface">admin_svc</div>
+<div class="col-span-3 text-on-surface truncate">Invoke-Mimikatz.ps1 execution</div>
+</div>
+<!-- Row -->
+<div class="grid grid-cols-12 gap-2 p-3 border-b border-[#1B2520] hover:bg-[#1B2520] cursor-pointer group transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-transparent group-hover:bg-primary/50 transition-colors"></div>
+<div class="col-span-2 text-on-surface-variant">2023-10-27 14:31:45.882</div>
+<div class="col-span-1"><span class="bg-error-container/50 text-error px-1.5 py-0.5 rounded text-[10px]">HIGH</span></div>
+<div class="col-span-2 text-tertiary">192.168.1.105</div>
+<div class="col-span-2 text-on-surface">SRV-AD-01</div>
+<div class="col-span-2 text-on-surface">admin_svc</div>
+<div class="col-span-3 text-on-surface truncate">Multiple failed logins (4625)</div>
+</div>
+<!-- Row -->
+<div class="grid grid-cols-12 gap-2 p-3 border-b border-[#1B2520] hover:bg-[#1B2520] cursor-pointer group transition-colors">
+<div class="col-span-2 text-on-surface-variant">2023-10-27 14:30:12.110</div>
+<div class="col-span-1"><span class="bg-surface-bright text-on-surface px-1.5 py-0.5 rounded text-[10px]">MED</span></div>
+<div class="col-span-2 text-tertiary">10.0.45.22</div>
+<div class="col-span-2 text-on-surface">WKSTN-404</div>
+<div class="col-span-2 text-on-surface">jdoe</div>
+<div class="col-span-3 text-on-surface truncate">Unusual port scan detected</div>
+</div>
+<!-- More rows to fill space -->
+<div class="grid grid-cols-12 gap-2 p-3 border-b border-[#1B2520] hover:bg-[#1B2520] cursor-pointer group transition-colors opacity-70"><div class="col-span-2 text-on-surface-variant">2023-10-27 14:28:05.001</div><div class="col-span-1"><span class="bg-surface-bright text-on-surface px-1.5 py-0.5 rounded text-[10px]">LOW</span></div><div class="col-span-2 text-tertiary">10.0.45.22</div><div class="col-span-2 text-on-surface">WKSTN-404</div><div class="col-span-2 text-on-surface">SYSTEM</div><div class="col-span-3 text-on-surface truncate">Service state changed</div></div>
+<div class="grid grid-cols-12 gap-2 p-3 border-b border-[#1B2520] hover:bg-[#1B2520] cursor-pointer group transition-colors opacity-70"><div class="col-span-2 text-on-surface-variant">2023-10-27 14:25:33.420</div><div class="col-span-1"><span class="bg-surface-bright text-on-surface px-1.5 py-0.5 rounded text-[10px]">LOW</span></div><div class="col-span-2 text-tertiary">192.168.1.50</div><div class="col-span-2 text-on-surface">SRV-EX-02</div><div class="col-span-2 text-on-surface">SYSTEM</div><div class="col-span-3 text-on-surface truncate">Scheduled task created</div></div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Event Detail -->
+<div class="w-96 bg-[#1B2520]/80 backdrop-blur-md border-l border-[#1B2520] flex flex-col shrink-0 relative">
+<!-- Glassmorphism slide effect -->
+<div class="absolute inset-0 shadow-[inset_1px_1px_0_rgba(255,255,255,0.05),_inset_-1px_-1px_0_rgba(0,0,0,0.2)] pointer-events-none"></div>
+<div class="p-4 border-b border-[#1B2520] flex justify-between items-center bg-surface-container-high/50">
+<h2 class="font-headline-md text-headline-md text-sm text-on-surface">Event Details</h2>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<!-- Header Info -->
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-error-container text-error px-2 py-1 rounded font-label-caps text-label-caps">CRITICAL</span>
+<span class="font-mono-data text-mono-data text-on-surface-variant text-xs">Event ID: 4104</span>
+</div>
+<h3 class="font-body-lg text-body-lg text-on-surface">PowerShell Script Block Logging</h3>
+</div>
+<!-- Risk Indicators -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-2 border-b border-[#1B2520] pb-1">Risk Indicators</h4>
+<div class="flex flex-wrap gap-2">
+<span class="bg-[#B97A00]/20 text-[#FFB340] border border-[#B97A00]/50 px-2 py-1 rounded font-mono-data text-mono-data text-xs uppercase">Credential Access</span>
+<span class="bg-[#B97A00]/20 text-[#FFB340] border border-[#B97A00]/50 px-2 py-1 rounded font-mono-data text-mono-data text-xs uppercase">T1003.001</span>
+</div>
+</div>
+<!-- Connection Map (Node connection logic visual) -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-2 border-b border-[#1B2520] pb-1">Entity Graph</h4>
+<div class="h-24 bg-[#0B0F0D] border border-[#1B2520] rounded relative flex items-center justify-center">
+<!-- Decorative SVG mapping -->
+<svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<line stroke="#4C7A89" stroke-dasharray="2,2" stroke-opacity="0.5" stroke-width="1" x1="20%" x2="50%" y1="50%" y2="50%"></line>
+<line stroke="#4C7A89" stroke-opacity="0.5" stroke-width="1" x1="50%" x2="80%" y1="50%" y2="50%"></line>
+</svg>
+<div class="absolute left-[20%] -translate-x-1/2 flex flex-col items-center gap-1 z-10">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="font-mono-data text-[10px] text-tertiary">192.168.1.105</span>
+</div>
+<div class="absolute left-[50%] -translate-x-1/2 flex flex-col items-center gap-1 z-10">
+<div class="w-3 h-3 rounded-full bg-error animate-pulse"></div>
+<span class="font-mono-data text-[10px] text-error">admin_svc</span>
+</div>
+<div class="absolute left-[80%] -translate-x-1/2 flex flex-col items-center gap-1 z-10">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-mono-data text-[10px] text-secondary">SRV-AD-01</span>
+</div>
+</div>
+</div>
+<!-- Raw Log Data -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-2 border-b border-[#1B2520] pb-1">Raw Log Segment</h4>
+<div class="bg-[#0B0F0D] border border-[#1B2520] rounded p-3 font-mono-data text-mono-data text-[11px] text-on-surface-variant break-all overflow-x-hidden">
+<span class="text-tertiary">{"Message":</span> "Creating Scriptblock text (1 of 1):\nInvoke-Mimikatz -DumpCreds",
+                                <span class="text-tertiary">"Level":</span> 4,
+                                <span class="text-tertiary">"Task":</span> 2,
+                                <span class="text-tertiary">"Opcode":</span> 15,
+                                <span class="text-tertiary">"Channel":</span> "Microsoft-Windows-PowerShell/Operational",
+                                <span class="text-tertiary">"Provider":</span> "Microsoft-Windows-PowerShell",
+                                <span class="text-tertiary">"Keywords":</span> "0x8000000000000000"
+                                <span class="text-tertiary">}</span>
+</div>
+</div>
+<!-- Hex View Snippet -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-2 border-b border-[#1B2520] pb-1">Memory Hex Snippet</h4>
+<div class="bg-[#0B0F0D] border border-[#1B2520] rounded p-3 font-mono-data text-mono-data text-[10px] text-on-surface-variant">
+<div class="flex gap-4">
+<div class="opacity-50 select-none">
+                                        00400000<br/>00400010<br/>00400020
+                                    </div>
+<div class="text-on-surface">
+                                        4D 5A 90 00 03 00 00 00<br/>
+                                        00 00 00 00 00 00 00 00<br/>
+<span class="text-error bg-error/20">6D 69 6D 69 6B 61 74 7A</span>
+</div>
+<div class="opacity-70 hidden md:block">
+                                        MZ......<br/>
+                                        ........<br/>
+<span class="text-error">mimikatz</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-[#1B2520]">
+<button class="w-full border border-primary text-primary hover:bg-primary/10 hover:shadow-[0_0_10px_rgba(148,214,157,0.3)] py-2 rounded font-mono-data text-mono-data font-bold transition-all">
+                                Create Incident Report
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

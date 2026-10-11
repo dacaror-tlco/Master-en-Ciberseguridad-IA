@@ -1,0 +1,14 @@
+# Entorno completo de desarrollo: la aplicación web, los tests y el motor de
+# captura en vivo de agent/ (fase anterior, fuera del flujo web).
+# Versiones fijadas (ver requirements-web.txt).
+-r requirements-web.txt
+
+# --- tests ---
+pytest==9.1.1
+httpx==0.28.1
+
+# --- motor de captura en vivo agent/ (no lo usa la aplicación web) ---
+watchdog==6.0.0
+psutil==7.2.2
+flask==3.1.3
+pywin32==312; sys_platform == "win32"

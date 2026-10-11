@@ -1,0 +1,53 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: track-inc-mysql
+    restart: unless-stopped
+    volumes:
+      - track-inc-mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DB}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  track-inc:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      # Este despliegue es el del módulo por separado: API + su frontend. El
+      # despliegue común de development usa la variante por defecto (`api`).
+      target: completo
+    container_name: track-inc
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8089:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DB}
+      # La cadena de integridad vive fuera de MySQL: sin volumen se perderia
+      # al reconstruir el contenedor y la verificacion daria falsos fallos.
+      - TRACKING_CHAIN_DIR=/app/.tracking_chain
+      # Despliegue del modulo POR SEPARADO: no hay backend de Casos que emita
+      # tokens ni pantalla de login, asi que la autenticacion se desactiva. En
+      # el despliegue comun de development no se pone esta variable: alli los
+      # cinco endpoints exigen el JWT y se comparte JWT_SECRET con Casos.
+      - TRACKING_AUTH_DESACTIVADA=1
+      # Este despliegue es el del modulo POR SEPARADO y su gracia es poder
+      # ensenarlo entero, asi que aqui si se sirve la interfaz propia (la que
+      # esta en desuso en el dia a dia, ver README). En el despliegue comun no
+      # se pone: alli la pantalla la sirve el frontend unico.
+      - TRACKING_FRONTEND_LOCAL=1
+    volumes:
+      - track-inc-chain:/app/.tracking_chain
+
+volumes:
+  track-inc-mysql:
+  track-inc-chain:

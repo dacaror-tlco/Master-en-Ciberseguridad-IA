@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: informes-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=nexus_informes
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - informes-mysql-data:/var/lib/mysql
+    # Sin `ports`: la base de datos solo tiene que ser accesible para el
+    # contenedor de la aplicación, y para eso basta la red interna de Compose.
+    # Publicarla en el host expone el 3306 de la máquina, que en un despliegue
+    # con dominio público significa exponer MySQL a Internet. Para inspeccionarla
+    # a mano en desarrollo: `docker compose exec mysql mysql -u informes -p`.
+
+  informes:
+    build:
+      # Raíz del repo: la imagen lleva también mcp-server/ y docs/.
+      context: ../..
+      dockerfile: sharingan/deploy/Dockerfile
+    container_name: informes
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    # Escucha solo en la interfaz local: delante va un proxy inverso que pone
+    # el TLS y el control de acceso. El módulo no tiene autenticación, así que
+    # publicar este puerto en todas las interfaces deja los informes periciales
+    # al alcance de cualquiera que llegue a la máquina.
+    ports:
+      - "127.0.0.1:8089:8000"
+    volumes:
+      - informes-storage:/repo/sharingan/storage
+    environment:
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/nexus_informes
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - REPORTS_STORAGE_DIR=/repo/sharingan/storage
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+
+volumes:
+  informes-mysql-data:
+  informes-storage:

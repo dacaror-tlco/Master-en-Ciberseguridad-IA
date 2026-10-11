@@ -1,0 +1,10 @@
+{
+  "case": {
+    "nombre": "Caso recién creado - sin timeline todavía",
+    "estado": "abierto",
+    "fecha_creacion": "2026-08-04T09:00:00Z",
+    "descripcion": "Caso abierto pero Módulo 4 aún no ha generado ningún evento de línea temporal. Útil para probar el error 422 de /reports/generate.",
+    "responsable": "Ana Pérez"
+  },
+  "timeline_events": []
+}

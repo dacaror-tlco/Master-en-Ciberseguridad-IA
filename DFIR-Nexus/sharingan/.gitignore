@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+storage/
+
+# Maquetas de diseño de NEXUS (HTML + PNG de las 7 pantallas). Material común a
+# todo el frontend y 6 MB de binarios: no pertenece a la rama de este módulo.
+design.zip

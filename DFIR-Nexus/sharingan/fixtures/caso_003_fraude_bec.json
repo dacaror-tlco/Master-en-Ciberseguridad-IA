@@ -1,0 +1,145 @@
+{
+  "case": {
+    "nombre": "Fraude del CEO - Transferencia no autorizada",
+    "estado": "en_progreso",
+    "fecha_creacion": "2026-08-03T08:20:00Z",
+    "descripcion": "El departamento financiero de Beltrán Logística S.L. ejecuta una transferencia de 48.500 € tras recibir instrucciones por correo aparentemente firmadas por el director general. Se investiga la suplantación y el destino de los fondos.",
+    "responsable": "Ana Pérez"
+  },
+  "evidences": [
+    {
+      "tipo": "correo",
+      "valor": "EV-001 — mensaje original en formato .eml, con cabeceras completas, remitido a la responsable de tesorería",
+      "fecha_subida": "2026-08-03T09:05:00Z",
+      "observaciones": "Exportado del buzón por el propio departamento de IT del cliente"
+    },
+    {
+      "tipo": "documento",
+      "valor": "EV-002 — justificante de la orden de transferencia emitida por la entidad bancaria",
+      "fecha_subida": "2026-08-03T09:30:00Z",
+      "observaciones": "Aportado por el cliente"
+    },
+    {
+      "tipo": "captura",
+      "valor": "EV-003 — capturas de la conversación posterior por mensajería instantánea con el supuesto director",
+      "fecha_subida": "2026-08-03T12:10:00Z",
+      "observaciones": "Sin verificación de integridad del dispositivo de origen"
+    }
+  ],
+  "osint_results": [
+    {
+      "tipo_indicador": "dominio",
+      "valor": "beltran-logistica.com",
+      "reputacion": "sospechosa",
+      "pais": "Estados Unidos",
+      "detecciones": 4,
+      "fuente": "VirusTotal",
+      "fecha_consulta": "2026-08-03T13:00:00Z",
+      "raw_response": {"registrado": "2026-07-28", "registrar": "NameSilo, LLC", "nota": "dominio legitimo del cliente: beltranlogistica.com"}
+    },
+    {
+      "tipo_indicador": "email",
+      "valor": "direccion@beltran-logistica.com",
+      "reputacion": "maliciosa",
+      "pais": null,
+      "detecciones": 7,
+      "fuente": "AbuseIPDB",
+      "fecha_consulta": "2026-08-03T13:05:00Z",
+      "raw_response": {"reports": 7, "categorias": ["phishing", "fraude"]}
+    },
+    {
+      "tipo_indicador": "ip",
+      "valor": "198.51.100.77",
+      "reputacion": "maliciosa",
+      "pais": "Nigeria",
+      "detecciones": 19,
+      "fuente": "AbuseIPDB",
+      "fecha_consulta": "2026-08-03T13:12:00Z",
+      "raw_response": {"abuseConfidenceScore": 92, "totalReports": 19}
+    },
+    {
+      "tipo_indicador": "iban",
+      "valor": "LT98 3250 0000 0000 1234",
+      "reputacion": "sospechosa",
+      "pais": "Lituania",
+      "detecciones": null,
+      "fuente": "Consulta manual",
+      "fecha_consulta": "2026-08-03T14:00:00Z",
+      "raw_response": null
+    }
+  ],
+  "tracking_events": [
+    {
+      "hora": "2026-08-03T07:41:00Z",
+      "evento": "Recepción del correo suplantado desde 198.51.100.77, con SPF fallido y sin firma DKIM",
+      "severidad": "alta",
+      "fuente_log": "mail.log",
+      "usuario_detectado": "tesoreria@beltranlogistica.com"
+    },
+    {
+      "hora": "2026-08-03T08:02:00Z",
+      "evento": "Apertura del mensaje y respuesta desde el puesto de tesorería",
+      "severidad": "media",
+      "fuente_log": "mail.log",
+      "usuario_detectado": "tesoreria@beltranlogistica.com"
+    },
+    {
+      "hora": "2026-08-03T08:58:00Z",
+      "evento": "Orden de transferencia de 48.500 EUR al IBAN LT98 3250 0000 0000 1234",
+      "severidad": "critica",
+      "fuente_log": "banca_electronica",
+      "usuario_detectado": "tesoreria@beltranlogistica.com"
+    }
+  ],
+  "timeline_events": [
+    {
+      "fecha_hora": "2026-07-28T00:00:00Z",
+      "descripcion": "Registro del dominio beltran-logistica.com, homógrafo del dominio corporativo legítimo beltranlogistica.com (un guion de diferencia).",
+      "origen_modulo": "osint",
+      "origen_id": 1,
+      "orden": 1
+    },
+    {
+      "fecha_hora": "2026-08-03T07:41:00Z",
+      "descripcion": "Recepción del correo que suplanta al director general, remitido desde 198.51.100.77 con SPF fallido y sin firma DKIM.",
+      "origen_modulo": "tracking",
+      "origen_id": 1,
+      "orden": 2
+    },
+    {
+      "fecha_hora": "2026-08-03T07:42:00Z",
+      "descripcion": "La dirección remitente direccion@beltran-logistica.com acumula 7 denuncias por fraude en fuentes abiertas.",
+      "origen_modulo": "osint",
+      "origen_id": 2,
+      "orden": 3
+    },
+    {
+      "fecha_hora": "2026-08-03T08:02:00Z",
+      "descripcion": "La responsable de tesorería abre el mensaje y responde solicitando confirmación; la respuesta se dirige al dominio suplantado.",
+      "origen_modulo": "tracking",
+      "origen_id": 2,
+      "orden": 4
+    },
+    {
+      "fecha_hora": "2026-08-03T08:58:00Z",
+      "descripcion": "Se ejecuta la transferencia de 48.500 EUR al IBAN lituano indicado en el correo, sin verificación por canal alternativo.",
+      "origen_modulo": "tracking",
+      "origen_id": 3,
+      "orden": 5
+    },
+    {
+      "fecha_hora": "2026-08-03T09:05:00Z",
+      "descripcion": "Aportación del mensaje original en formato .eml con sus cabeceras completas para análisis.",
+      "origen_modulo": "evidences",
+      "origen_id": 1,
+      "orden": 6
+    },
+    {
+      "fecha_hora": "2026-08-03T14:00:00Z",
+      "descripcion": "La cuenta de destino corresponde a una entidad de pago lituana sin relación comercial previa con el cliente.",
+      "origen_modulo": "osint",
+      "origen_id": 4,
+      "orden": 7
+    }
+  ]
+}

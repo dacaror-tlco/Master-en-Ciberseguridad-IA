@@ -1,0 +1,42 @@
+# Unidad systemd para el agente de adquisición de evidencias.
+#
+# Instalación:
+#   sudo cp evidence-agent.service /etc/systemd/system/
+#   sudo mkdir -p /var/lib/evidence-agent
+#   sudo cp config/agent.example.yaml /etc/evidence-agent/agent.yaml   # ajustar antes
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now evidence-agent
+#
+# El agente necesita permisos de root (o capacidades específicas) para
+# monitorizar /var/log, procesos de otros usuarios, etc. Se ejecuta como
+# root aquí; en un hardening posterior se puede acotar con capacidades
+# concretas (CAP_DAC_READ_SEARCH, CAP_NET_ADMIN) en vez de root completo.
+
+[Unit]
+Description=Módulo 3 - Agente de adquisición de evidencias forenses
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/evidence-agent
+ExecStart=/opt/evidence-agent/venv/bin/python -m agent.main --config /etc/evidence-agent/agent.yaml
+Restart=on-failure
+RestartSec=5
+
+# El agente debe seguir intentando preservar evidencias incluso si el
+# sistema está bajo presión de recursos; se le da prioridad razonable.
+Nice=-5
+
+# Apagado ordenado: dar tiempo a que el orquestador termine sync_once()
+# y cierre el store limpiamente antes de que systemd mande SIGKILL.
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=evidence-agent
+
+[Install]
+WantedBy=multi-user.target

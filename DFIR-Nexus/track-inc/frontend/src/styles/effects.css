@@ -1,0 +1,83 @@
+/*
+ * Efectos globales de NEXUS. Todas las clases con prefijo nexus- se
+ * montan UNA ÚNICA VEZ, en AppShell (ver shared/layout/AppShell).
+ * Ningún módulo nuevo debe volver a declararlas ni crear un fondo
+ * alternativo — al montarse dentro de <Outlet /> se heredan automáticamente.
+ */
+
+/* Fondo base + "investigation grid": rejilla punteada de 32px */
+.nexus-canvas {
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(circle, var(--color-hairline) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Grano/ruido fijo, opacidad 2%, superpuesto a toda la pantalla */
+.nexus-noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.02;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Niebla radial en primary al 5%, para dar profundidad sin iluminación direccional */
+.nexus-mist-gradient {
+  background: radial-gradient(ellipse at top left, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent 60%);
+  pointer-events: none;
+}
+
+/* Línea animada de 2px recorriendo la pantalla verticalmente (8s) */
+.nexus-scanline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 2px;
+  pointer-events: none;
+  z-index: 40;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 40%, transparent), transparent);
+  animation: nexus-scanline-move 8s linear infinite;
+}
+
+@keyframes nexus-scanline-move {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* Panel "glass": fondo panel + borde bicolor simulando relieve, sin box-shadow */
+.nexus-glass-panel {
+  background-color: var(--color-panel);
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+  border-left: 1px solid rgb(255 255 255 / 0.1);
+  border-bottom: 1px solid rgb(0 0 0 / 0.05);
+  border-right: 1px solid rgb(0 0 0 / 0.05);
+}
+
+/* Glows de hover, por tono semántico */
+.nexus-glow-primary:hover {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+.nexus-glow-tertiary:hover {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-tertiary) 30%, transparent);
+}
+.nexus-glow-error:hover {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+/* Scrollbar de webkit personalizada */
+.nexus-scrollbars {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline) var(--color-canvas);
+}
+.nexus-scrollbars::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.nexus-scrollbars::-webkit-scrollbar-track {
+  background: var(--color-canvas);
+}
+.nexus-scrollbars::-webkit-scrollbar-thumb {
+  background-color: var(--color-hairline);
+  border-radius: var(--radius-lg);
+}

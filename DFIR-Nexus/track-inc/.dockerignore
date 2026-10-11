@@ -1,0 +1,15 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+.tracking_chain/
+.claude/
+tests/
+legacy-frontend/
+examples/

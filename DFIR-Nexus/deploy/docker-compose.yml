@@ -1,0 +1,172 @@
+# Stack completo de DFIR Nexus (rama development): los cinco backends +
+# el frontend único, todos apuntando a la base de datos MySQL compartida
+# de Aiven (la misma que ya usa el equipo en desarrollo — ver
+# docs/INTEGRACION_Y_DESPLIEGUE.md, no se levanta MySQL aquí). Contexto de
+# build de cada servicio: la raíz del repo (esta carpeta es deploy/, un
+# nivel por debajo), porque cada Dockerfile necesita ver más de un módulo
+# (el gateway) o vive fuera de deploy/ (los backends).
+#
+# Despliegue con Portainer (Build method: Repository), repo privado:
+# rama `development`, Compose path `deploy/docker-compose.yml` — igual
+# que el patrón ya usado para scam-shield en solitario, ver su README.
+services:
+  casos:
+    build:
+      context: ../backend
+      dockerfile: deploy/Dockerfile
+    container_name: nexus-casos
+    restart: unless-stopped
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DB=${MYSQL_DB}
+      # Identidad (Fase 4). Este backend es la autoridad: posee `users` y es
+      # el ÚNICO que emite JWT; los otros cuatro solo verifican con el mismo
+      # secreto. Faltaba en el stack, así que los cinco venían cayendo al
+      # valor por defecto del código, "change_me" — que es justo el fallback
+      # que se deja aquí: mientras la variable no se rellene, la firma es
+      # idéntica a la de ahora y NINGUNA sesión ni credencial se invalida.
+      #
+      # Al rellenarla (recomendado: 32+ bytes aleatorios) hay que poner el
+      # MISMO valor en los cinco y volver a desplegar. Las contraseñas no se
+      # tocan —viven hasheadas en `users`— pero los tokens ya emitidos dejan
+      # de valer: la única consecuencia es volver a iniciar sesión.
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+      - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES:-120}
+      # Secreto de servicio, distinto del anterior: autentica la llamada
+      # servidor->servidor de OSINT a POST /cases/{id}/auditoria/osint. Solo
+      # lo comparten Casos y OSINT, nunca el frontend.
+      - OSINT_AUDIT_SERVICE_TOKEN=${OSINT_AUDIT_SERVICE_TOKEN:-change_me}
+
+  osint:
+    build:
+      context: ../scam-shield
+      dockerfile: deploy/Dockerfile
+    container_name: nexus-osint
+    restart: unless-stopped
+    # Ver docs/INTEGRACION_Y_DESPLIEGUE.md / memoria de despliegue: el DNS
+    # embebido de Docker en la Pi dio timeouts generalizados: se fuerzan
+    # DNS públicos, mismo fix ya aplicado en el despliegue de scam-shield
+    # en solitario.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DB=${MYSQL_DB}
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+      - ABUSEIPDB_API_KEY=${ABUSEIPDB_API_KEY}
+      - ETHERSCAN_API_KEY=${ETHERSCAN_API_KEY}
+      - TRON_API_KEY=${TRON_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENSPAM_API_KEY=${OPENSPAM_API_KEY}
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY}
+      - PIMEYES_API_KEY=${PIMEYES_API_KEY}
+      - IPQUALITYSCORE_API_KEY=${IPQUALITYSCORE_API_KEY}
+      - FCA_API_EMAIL=${FCA_API_EMAIL}
+      - FCA_API_KEY=${FCA_API_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      # Ver la nota de JWT_SECRET en el servicio `casos`: aquí solo se
+      # verifica, nunca se emite.
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+      - OSINT_AUDIT_SERVICE_TOKEN=${OSINT_AUDIT_SERVICE_TOKEN:-change_me}
+      # URL pública real de este backend (a través del gateway), para que
+      # SerpApi pueda descargar la imagen a analizar en la búsqueda
+      # inversa — ver README de scam-shield, Módulo 7.
+      - PUBLIC_BASE_URL=${PUBLIC_URL}/api/osint
+      - CASES_API_BASE_URL=http://casos:8000
+
+  tracking:
+    build:
+      context: ../track-inc
+      dockerfile: deploy/Dockerfile
+    container_name: nexus-tracking
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+      # La cadena de custodia de Tracking vive en ficheros, fuera de MySQL:
+      # sin volumen se pierde al recrear el contenedor y la verificacion de
+      # integridad empieza a dar fallos que no son reales.
+      - TRACKING_CHAIN_DIR=/app/.tracking_chain
+    volumes:
+      - nexus-tracking-chain:/app/.tracking_chain
+
+  timeline:
+    build:
+      context: ../timeline
+      dockerfile: deploy/Dockerfile
+    container_name: nexus-timeline
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+
+  informes:
+    build:
+      # Raíz del repo, no ../sharingan: la imagen lleva también el servidor
+      # MCP, con el que el asistente lee el expediente, y la documentación
+      # que usa como base de conocimiento. Ver sharingan/deploy/Dockerfile.
+      context: ..
+      dockerfile: sharingan/deploy/Dockerfile
+    container_name: nexus-informes
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - REPORTS_STORAGE_DIR=/repo/sharingan/storage/reports
+      - JWT_SECRET=${JWT_SECRET:-change_me}
+      # Asistente conversacional (POST /chat) y narrativa del informe: los
+      # dos con la API de Anthropic, que es el motor que usa el equipo. Se
+      # declaran aquí de forma explícita aunque coincidan con el defecto del
+      # código, porque en este stack son la única opción posible: no hay
+      # Ollama, y levantarlo en el Pi no es realista (2,4 GB en memoria y
+      # ~3,5 tokens/s sin GPU). Si alguien pone "ollama" en el .env del
+      # despliegue, el chat responderá 502 contra un localhost:11434 que no
+      # existe.
+      - CHAT_PROVIDER=${CHAT_PROVIDER:-anthropic}
+      - ANTHROPIC_CHAT_MODEL=${ANTHROPIC_CHAT_MODEL:-claude-opus-5}
+      - NARRATIVA_PROVIDER=${NARRATIVA_PROVIDER:-anthropic}
+      # El asistente lee el expediente a través del servidor MCP, lanzado
+      # dentro de este contenedor con el JWT de quien pregunta. Estas son las
+      # URLs con las que ese proceso habla con los cinco backends: la red
+      # interna del stack, nunca el dominio público.
+      - CHAT_CONTEXTO=${CHAT_CONTEXTO:-mcp}
+      - CASOS_BASE_URL=http://casos:8000
+      - OSINT_BASE_URL=http://osint:8000
+      - TRACKING_BASE_URL=http://tracking:8000
+      - TIMELINE_BASE_URL=http://timeline:8000
+      - INFORMES_BASE_URL=http://informes:8000
+    volumes:
+      # Los informes ya emitidos sobreviven a un redeploy del stack. Mismo
+      # volumen que antes, montado donde la imagen guarda ahora el
+      # almacenamiento: los informes ya emitidos siguen ahí.
+      - nexus-reports:/repo/sharingan/storage/reports
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: deploy/gateway/Dockerfile
+    container_name: nexus-gateway
+    restart: unless-stopped
+    depends_on:
+      - casos
+      - osint
+      - tracking
+      - timeline
+      - informes
+    ports:
+      # Puerto del host -> apuntar aquí el proxy host de Nginx Proxy
+      # Manager para nexus.gondorhub.com (mismo patrón que el 8088 de
+      # scam-shield en solitario, puerto distinto para no chocar).
+      - "8091:80"
+
+volumes:
+  nexus-reports:
+  nexus-tracking-chain:

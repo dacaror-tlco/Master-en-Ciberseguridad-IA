@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+@import './tokens.css';
+@import './effects.css';
+
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-on-background);
+    font-family: var(--font-body-md);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-headline-md);
+  }
+}

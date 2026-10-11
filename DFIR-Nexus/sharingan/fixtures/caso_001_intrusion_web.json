@@ -1,0 +1,105 @@
+{
+  "case": {
+    "nombre": "Intrusión servidor web - Cliente Acme",
+    "estado": "en_progreso",
+    "fecha_creacion": "2026-08-01T09:00:00Z",
+    "descripcion": "Acceso no autorizado detectado en el servidor web de producción de Acme Corp. Se investiga vector de entrada y alcance del compromiso.",
+    "responsable": "Ana Pérez"
+  },
+  "evidences": [
+    {
+      "tipo": "imagen_disco",
+      "valor": "EV-001 — imagen forense del disco del servidor web (sha del soporte en cadena de custodia externa)",
+      "fecha_subida": "2026-08-01T10:15:00Z",
+      "observaciones": "Adquisición en caliente, servidor en producción"
+    },
+    {
+      "tipo": "log",
+      "valor": "EV-002 — access.log de nginx, del 2026-07-25 al 2026-08-02",
+      "fecha_subida": "2026-08-01T11:40:00Z",
+      "observaciones": "Exportado desde el propio servidor"
+    }
+  ],
+  "osint_results": [
+    {
+      "tipo_indicador": "ip",
+      "valor": "203.0.113.10",
+      "reputacion": "maliciosa",
+      "pais": "Países Bajos",
+      "detecciones": 12,
+      "fuente": "VirusTotal",
+      "fecha_consulta": "2026-08-01T11:02:00Z",
+      "raw_response": {"malicious": 12, "harmless": 78}
+    },
+    {
+      "tipo_indicador": "dominio",
+      "valor": "panel-control-atacante.example",
+      "reputacion": "sospechosa",
+      "pais": "desconocido",
+      "detecciones": 3,
+      "fuente": "AbuseIPDB",
+      "fecha_consulta": "2026-08-02T08:30:00Z",
+      "raw_response": {"registered_days_ago": 4}
+    }
+  ],
+  "tracking_events": [
+    {
+      "hora": "2026-08-01T12:20:00Z",
+      "evento": "Usuario del sistema 'www-data' ejecuta comandos de reconocimiento (whoami, id, uname -a)",
+      "severidad": "alta",
+      "fuente_log": "auth.log",
+      "usuario_detectado": "www-data"
+    },
+    {
+      "hora": "2026-08-01T13:05:00Z",
+      "evento": "Se identifica un webshell PHP en /uploads con timestamp coincidente con el intento de explotación",
+      "severidad": "critica",
+      "fuente_log": "filesystem-audit",
+      "usuario_detectado": "www-data"
+    }
+  ],
+  "timeline_events": [
+    {
+      "fecha_hora": "2026-08-01T10:15:00Z",
+      "descripcion": "Se recolecta imagen forense del disco del servidor web (evidencia EV-001).",
+      "origen_modulo": "evidences",
+      "origen_id": 1,
+      "orden": 1
+    },
+    {
+      "fecha_hora": "2026-08-01T11:02:00Z",
+      "descripcion": "La IP de origen 203.0.113.10 aparece marcada como maliciosa en VirusTotal (12/90 motores) y con reputación deficiente en AbuseIPDB.",
+      "origen_modulo": "osint",
+      "origen_id": 1,
+      "orden": 2
+    },
+    {
+      "fecha_hora": "2026-08-01T11:40:00Z",
+      "descripcion": "Log de acceso muestra intento de explotación de un endpoint de subida de ficheros sin validar extensión.",
+      "origen_modulo": "evidences",
+      "origen_id": 2,
+      "orden": 3
+    },
+    {
+      "fecha_hora": "2026-08-01T12:20:00Z",
+      "descripcion": "Se detecta el usuario del sistema 'www-data' ejecutando comandos de reconocimiento (whoami, id, uname -a) fuera de su patrón habitual.",
+      "origen_modulo": "tracking",
+      "origen_id": 1,
+      "orden": 4
+    },
+    {
+      "fecha_hora": "2026-08-01T13:05:00Z",
+      "descripcion": "Se identifica un webshell PHP subido al directorio /uploads, con timestamp coincidente con el intento de explotación.",
+      "origen_modulo": "tracking",
+      "origen_id": 2,
+      "orden": 5
+    },
+    {
+      "fecha_hora": "2026-08-02T08:30:00Z",
+      "descripcion": "Consulta OSINT adicional confirma que el dominio del panel de control del atacante fue registrado hace 4 días (posible infraestructura desechable).",
+      "origen_modulo": "osint",
+      "origen_id": 2,
+      "orden": 6
+    }
+  ]
+}
