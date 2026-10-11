@@ -13,6 +13,7 @@
 | 2026-10-05 | [Facultad](facultad.md) | Carlos Castillo |
 | 2026-10-06 | [Practica 1 Webos Castillo Gomez](practica-1-webos-castillo-gomez.md) | — |
 | 2026-10-07 | [Nibbles - Apuntes](nibbles-apuntes.md) | Carlos Gómez |
+| 2026-10-08 | [Nibbles Blunder](nibbles-blunder.md) | Carlos Castillo |
 | — | [Auditoria WordPress Academy](auditoria-wordpress-academy.md) | — |
 | — | [HTB Starting Point Tier 0](htb-starting-point-tier-0.md) | — |
 | — | [HTB Starting Point Tier 1](htb-starting-point-tier-1.md) | — |

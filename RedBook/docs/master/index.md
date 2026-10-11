@@ -35,6 +35,7 @@
 | 2026-10-05 | [Facultad](../red-team/maquinas/facultad.md) | Máquinas y prácticas | Carlos Castillo |
 | 2026-10-06 | [Practica 1 Webos Castillo Gomez](../red-team/maquinas/practica-1-webos-castillo-gomez.md) | Máquinas y prácticas | — |
 | 2026-10-07 | [Nibbles - Apuntes](../red-team/maquinas/nibbles-apuntes.md) | Máquinas y prácticas | Carlos Gómez |
+| 2026-10-08 | [Nibbles Blunder](../red-team/maquinas/nibbles-blunder.md) | Máquinas y prácticas | Carlos Castillo |
 | — | [Auditoria Web Desde 0](../red-team/web/auditoria-web-desde-0.md) | Auditoría web | — |
 | — | [Auditoria Web LFI Escalada Linux](../red-team/web/auditoria-web-lfi-escalada-linux.md) | Auditoría web | — |
 | — | [Auditoria WordPress Academy](../red-team/maquinas/auditoria-wordpress-academy.md) | Máquinas y prácticas | — |

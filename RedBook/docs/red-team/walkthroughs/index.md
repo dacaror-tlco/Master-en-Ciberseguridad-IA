@@ -8,8 +8,8 @@ Resolución paso a paso de las máquinas practicadas, a partir de los apuntes de
 (con comandos normalizados y algún añadido para que se entiendan).
 
 !!! warning "Fiabilidad"
-    Las máquinas **HTB/THM** (Nibbles, Devel, Bounty, Unified, Curling, Magic, GoodGames,
-    Oopsie, Mr Robot, Rick) están contrastadas con su resolución conocida y llevan nota cuando
+    Las máquinas **HTB/THM** (Nibbles, Blocky, Blunder, Devel, Bounty, Unified, Curling, Magic,
+    GoodGames, Oopsie, Mr Robot, Rick) están contrastadas con su resolución conocida y llevan nota cuando
     algo del apunte no cuadra. Las de **TheHackerLabs** se transcriben tal cual: no las he
     verificado de forma independiente, así que trátalas como tus notas y confirma los `[?]`.
 
@@ -17,6 +17,8 @@ Resolución paso a paso de las máquinas practicadas, a partir de los apuntes de
 |---|---|---|
 | Webos | SMB, crack SSH, SUID python | [Web y CMS](web.md) |
 | Nibbles | Nibbleblog CVE, upload | [Web y CMS](web.md) |
+| Blocky | WordPress, .jar decompile, reuso de pass, sudo -i | [Web y CMS](web.md) |
+| Blunder | Bludit CMS, CeWL, sudo CVE-2019-14287 | [Web y CMS](web.md) |
 | Facultad | WordPress, GTFOBins php | [Web y CMS](web.md) |
 | Bounty | IIS web.config, JuicyPotato | [Windows](windows.md) |
 | Devel | FTP+IIS, meterpreter, Potato | [Windows](windows.md) |

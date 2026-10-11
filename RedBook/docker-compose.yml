@@ -1,0 +1,7 @@
+services:
+  redbook:
+    build: .
+    container_name: redbook
+    ports:
+      - "8080:80"
+    restart: unless-stopped

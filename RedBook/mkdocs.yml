@@ -7,8 +7,9 @@ theme:
   name: material
   language: es
   font: false
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
   icon:
-    logo: material/book-open-variant
     repo: material/github
   palette:
     - media: "(prefers-color-scheme: dark)"
@@ -162,6 +163,7 @@ nav:
       - HTB Tier 2: red-team/maquinas/htb-tier-2.md
       - Magic: red-team/maquinas/magic.md
       - Nibbles - Apuntes: red-team/maquinas/nibbles-apuntes.md
+      - Nibbles Blunder: red-team/maquinas/nibbles-blunder.md
       - Nibbles HTB: red-team/maquinas/nibbles-htb.md
       - Practica 1 Webos Castillo Gomez: red-team/maquinas/practica-1-webos-castillo-gomez.md
       - Repaso Metodologia Web SSTI CasaPaco: red-team/maquinas/repaso-metodologia-web-ssti-casapaco.md

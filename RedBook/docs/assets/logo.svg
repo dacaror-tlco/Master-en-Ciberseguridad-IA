@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" stroke="#f0d08a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <!-- libro abierto: página izquierda, página derecha y lomo central -->
+  <path d="M6 3.1C4.5 2.2 2.7 2.1 1 2.6V9.2C2.7 8.7 4.5 8.8 6 9.7"/>
+  <path d="M6 3.1C7.5 2.2 9.3 2.1 11 2.6V9.2C9.3 8.7 7.5 8.8 6 9.7"/>
+  <path d="M6 3.1V9.7"/>
+  <!-- marcapáginas / cinta -->
+  <path d="M8.6 2.3V5l.8-.6.8.6V2.5"/>
+</svg>
